@@ -717,6 +717,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     private fun clear() {
+        if (isTranslateLanguageSelectorVisible) hideTranslateLanguageSelector()
         suggestionsStrip.removeAllViews()
         if (DEBUG_SUGGESTIONS) removeAllDebugInfoViews()
         if (!toolbarContainer.isVisible)
@@ -755,10 +756,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         languageList.removeAllViews()
 
         val languageNames = resources.getStringArray(R.array.translate_language_names)
+        val languageCodes = resources.getStringArray(R.array.translate_language_codes)
         val prefs = context.prefs()
 
         // Create a button for each language
-        for (languageName in languageNames) {
+        for ((index, languageName) in languageNames.withIndex()) {
+            val languageCode = languageCodes.getOrNull(index) ?: return
             val button = android.widget.TextView(context, null, R.attr.suggestionWordStyle).apply {
                 text = languageName
                 gravity = android.view.Gravity.CENTER
@@ -779,8 +782,9 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 context.prefs().edit().apply {
                     putString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, languageName)
                     // Also update Gemini target language
-                    putString(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, languageName)
+                    putString(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, languageCode)
                 }.apply()
+                helium314.keyboard.latin.utils.ProofreadService(context).setTargetLanguage(languageCode)
                 // Hide selector and trigger translation
                 hideTranslateLanguageSelector()
                 // Trigger translation with new language
