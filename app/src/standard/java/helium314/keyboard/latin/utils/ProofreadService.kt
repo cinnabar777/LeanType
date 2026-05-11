@@ -174,6 +174,12 @@ class ProofreadService(private val context: Context) {
         securePrefs.edit().putString(KEY_MODEL_NAME, modelName).apply()
     }
 
+    fun getTranslateModelName(): String = securePrefs.getString(KEY_TRANSLATE_MODEL_NAME, "") ?: ""
+
+    fun setTranslateModelName(modelName: String) {
+        securePrefs.edit().putString(KEY_TRANSLATE_MODEL_NAME, modelName).apply()
+    }
+
     // Target language
     fun getTargetLanguage(): String = securePrefs.getString(KEY_TARGET_LANGUAGE, DEFAULT_TARGET_LANGUAGE) ?: DEFAULT_TARGET_LANGUAGE
 
@@ -200,6 +206,12 @@ class ProofreadService(private val context: Context) {
 
     fun setHuggingFaceModel(model: String) {
         securePrefs.edit().putString(KEY_HF_MODEL, model.trim()).apply()
+    }
+
+    fun getTranslateHuggingFaceModel(): String = securePrefs.getString(KEY_TRANSLATE_HF_MODEL, "") ?: ""
+
+    fun setTranslateHuggingFaceModel(model: String) {
+        securePrefs.edit().putString(KEY_TRANSLATE_HF_MODEL, model.trim()).apply()
     }
 
     // HuggingFace API endpoint
@@ -353,8 +365,10 @@ class ProofreadService(private val context: Context) {
         }
 
         return try {
+            val translateModel = getTranslateModelName()
+            val modelToUse = if (translateModel.isBlank()) getModelName() else translateModel
             val model = GenerativeModel(
-                modelName = getModelName(),
+                modelName = modelToUse,
                 apiKey = apiKey,
                 generationConfig = generationConfig {
                     temperature = 0.3f
@@ -406,11 +420,26 @@ class ProofreadService(private val context: Context) {
         securePrefs.edit().putString(KEY_GROQ_MODEL, model.trim()).apply()
     }
 
+    fun getTranslateGroqModel(): String = securePrefs.getString(KEY_TRANSLATE_GROQ_MODEL, "") ?: ""
+
+    fun setTranslateGroqModel(model: String) {
+        securePrefs.edit().putString(KEY_TRANSLATE_GROQ_MODEL, model.trim()).apply()
+    }
+
     // ======================== HuggingFace/Groq Implementation ========================
 
-    private fun huggingFaceRequest(prompt: String, showThinking: Boolean = false): Result<String> {
+    private fun huggingFaceRequest(prompt: String, showThinking: Boolean = false, isTranslate: Boolean = false): Result<String> {
         val isGroq = getProvider() == AIProvider.GROQ
-        val modelName = if (isGroq) getGroqModel() else getHuggingFaceModel()
+        
+        val modelName = if (isTranslate) {
+            if (isGroq) {
+                getTranslateGroqModel().ifBlank { getGroqModel() }
+            } else {
+                getTranslateHuggingFaceModel().ifBlank { getHuggingFaceModel() }
+            }
+        } else {
+            if (isGroq) getGroqModel() else getHuggingFaceModel()
+        }
         
         if (modelName.isBlank()) {
             return Result.failure(
@@ -517,7 +546,7 @@ class ProofreadService(private val context: Context) {
     private fun huggingFaceTranslate(text: String): Result<String> {
         val targetLanguage = getTargetLanguage()
         val prompt = "${getTranslatePrompt(targetLanguage)}$text"
-        return huggingFaceRequest(prompt, showThinking = false)
+        return huggingFaceRequest(prompt, showThinking = false, isTranslate = true)
     }
 
     class ProofreadException(message: String) : Exception(message)
@@ -527,13 +556,16 @@ class ProofreadService(private val context: Context) {
         private const val PREFS_NAME = "gemini_prefs"
         private const val KEY_API_KEY = "gemini_api_key"
         private const val KEY_MODEL_NAME = "gemini_model_name"
+        private const val KEY_TRANSLATE_MODEL_NAME = "translate_gemini_model_name"
         private const val KEY_TARGET_LANGUAGE = "gemini_target_language"
         private const val KEY_PROVIDER = "ai_provider"
         private const val KEY_HF_TOKEN = "huggingface_token"
         private const val KEY_HF_MODEL = "huggingface_model"
+        private const val KEY_TRANSLATE_HF_MODEL = "translate_huggingface_model"
         private const val KEY_HF_ENDPOINT = "huggingface_endpoint"
         private const val KEY_GROQ_TOKEN = "groq_token"
         private const val KEY_GROQ_MODEL = "groq_model"
+        private const val KEY_TRANSLATE_GROQ_MODEL = "translate_groq_model"
         private const val DEFAULT_TARGET_LANGUAGE = "English"
         private const val DEFAULT_HF_MODEL = "gpt-4o-mini"
         private const val DEFAULT_HF_ENDPOINT = "https://api.openai.com/v1/chat/completions"

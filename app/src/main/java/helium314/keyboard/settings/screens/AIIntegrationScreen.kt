@@ -61,17 +61,20 @@ private fun StandardAIIntegrationScreen(onClickBack: () -> Unit) {
                 add(SettingsWithoutKey.GROQ_TOKEN)
                 add(SettingsWithoutKey.GROQ_MODEL)
                 add(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE)
+                add(SettingsWithoutKey.TRANSLATE_GROQ_MODEL)
             }
             "GEMINI" -> {
                 add(SettingsWithoutKey.GEMINI_API_KEY)
                 add(SettingsWithoutKey.GEMINI_MODEL)
                 add(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE)
+                add(SettingsWithoutKey.TRANSLATE_GEMINI_MODEL)
             }
             "OPENAI" -> {
                 add(SettingsWithoutKey.HUGGINGFACE_TOKEN)
                 add(SettingsWithoutKey.HUGGINGFACE_MODEL)
                 add(SettingsWithoutKey.HUGGINGFACE_ENDPOINT)
                 add(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE)
+                add(SettingsWithoutKey.TRANSLATE_HUGGINGFACE_MODEL)
             }
         }
     }

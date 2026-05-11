@@ -471,6 +471,68 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
             }
         )
     },
+    Setting(context, SettingsWithoutKey.TRANSLATE_GEMINI_MODEL, R.string.translate_model_title, R.string.translate_model_summary) { setting ->
+        val ctx = LocalContext.current
+        val service = remember { helium314.keyboard.latin.utils.ProofreadService(ctx) }
+        var items by remember { mutableStateOf(listOf("Default (Proofreading)" to "") + helium314.keyboard.latin.utils.ProofreadService.AVAILABLE_MODELS.map { it to it }) }
+        var selectedModel by remember { mutableStateOf(service.getTranslateModelName()) }
+
+        LaunchedEffect(Unit) {
+            val models = service.fetchAvailableModels(helium314.keyboard.latin.utils.ProofreadService.AIProvider.GEMINI)
+            items = listOf("Default (Proofreading)" to "") + models.map { it to it }
+        }
+
+        ListPreference(
+            setting = setting,
+            items = items,
+            default = selectedModel,
+            onChanged = { newModel ->
+                service.setTranslateModelName(newModel)
+                selectedModel = newModel
+            }
+        )
+    },
+    Setting(context, SettingsWithoutKey.TRANSLATE_GROQ_MODEL, R.string.translate_model_title, R.string.translate_model_summary) { setting ->
+        val ctx = LocalContext.current
+        val service = remember { helium314.keyboard.latin.utils.ProofreadService(ctx) }
+        var items by remember { mutableStateOf(listOf("Default (Proofreading)" to "") + helium314.keyboard.latin.utils.GroqModels.AVAILABLE_MODELS.map { it to it }) }
+        var selectedModel by remember { mutableStateOf(service.getTranslateGroqModel()) }
+
+        LaunchedEffect(Unit) {
+            val models = service.fetchAvailableModels(helium314.keyboard.latin.utils.ProofreadService.AIProvider.GROQ)
+            items = listOf("Default (Proofreading)" to "") + models.map { it to it }
+        }
+        
+        ListPreference(
+            setting = setting,
+            items = items,
+            default = selectedModel,
+            onChanged = { newModel ->
+                service.setTranslateGroqModel(newModel)
+                selectedModel = newModel
+            }
+        )
+    },
+    Setting(context, SettingsWithoutKey.TRANSLATE_HUGGINGFACE_MODEL, R.string.translate_model_title, R.string.translate_model_summary) { setting ->
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        val ctx = LocalContext.current
+        val service = remember { helium314.keyboard.latin.utils.ProofreadService(ctx) }
+        val currentModel = service.getTranslateHuggingFaceModel().ifBlank { "Default (Proofreading)" }
+        Preference(
+            name = setting.title,
+            description = currentModel,
+            onClick = { showDialog = true }
+        )
+        if (showDialog) {
+            TextInputDialog(
+                onDismissRequest = { showDialog = false },
+                textInputLabel = { Text("model-name") },
+                initialText = service.getTranslateHuggingFaceModel(),
+                onConfirmed = { service.setTranslateHuggingFaceModel(it) },
+                title = { Text(stringResource(R.string.translate_model_title)) }
+            )
+        }
+    },
     if (BuildConfig.FLAVOR == "standard") Setting(context, SettingsWithoutKey.CUSTOM_AI_KEYS, R.string.custom_ai_keys_title, R.string.custom_ai_keys_summary) {
         Preference(
             name = it.title,

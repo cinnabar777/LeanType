@@ -434,6 +434,8 @@
     <string name="translate_no_text">No text to translate</string>
     <string name="translate_target_language_title">Translation target language</string>
     <string name="translate_target_language_summary">Select the language to translate to</string>
+    <string name="translate_model_title">Translation Model</string>
+    <string name="translate_model_summary">Select the AI model for translation. Leave empty to use proofreading model.</string>
     
     <!-- Translation target language options -->
     <string-array name="translate_language_names">

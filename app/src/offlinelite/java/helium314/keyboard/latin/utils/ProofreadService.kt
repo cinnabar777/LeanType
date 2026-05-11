@@ -42,6 +42,15 @@ class ProofreadService(private val context: Context) {
     fun getTargetLanguage(): String = "English"
     fun setTargetLanguage(language: String) { /* No-op */ }
 
+    fun getTranslateModelName(): String = ""
+    fun setTranslateModelName(modelName: String) { /* No-op */ }
+
+    fun getTranslateHuggingFaceModel(): String = ""
+    fun setTranslateHuggingFaceModel(modelName: String) { /* No-op */ }
+
+    fun getTranslateGroqModel(): String = ""
+    fun setTranslateGroqModel(modelName: String) { /* No-op */ }
+
     fun getHuggingFaceToken(): String? = null
     fun setHuggingFaceToken(token: String?) { /* No-op */ }
 

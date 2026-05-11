@@ -904,6 +904,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     private fun updateSplitToolbarState() {
         if (!Settings.getValues().mSplitToolbar) return
+        if (isShowingEmojiSuggestions) {
+            suggestionsStrip.isVisible = true
+            return
+        }
         suggestionsStrip.isVisible = true
         
         val PLACEHOLDER_TAG = "PLACEHOLDER_VIEW"
