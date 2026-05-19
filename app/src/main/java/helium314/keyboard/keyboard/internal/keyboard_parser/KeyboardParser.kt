@@ -61,11 +61,6 @@ class KeyboardParser(private val params: KeyboardParams, private val context: Co
         }
         val baseKeys = LayoutParser.parseLayout(layoutType, params, context)
 
-        if (!params.mId.mNumberRowEnabled && params.mId.mNumberRowInSymbols && params.mId.isAlphaOrSymbolKeyboard && !params.mId.isAlphabetKeyboard) {
-            params.mDefaultRowHeight = 1f / (KeyboardParams.DEFAULT_KEYBOARD_ROWS + 1f)
-            params.mDefaultAbsoluteRowHeight = (params.mDefaultRowHeight * params.mBaseHeight).toInt()
-        }
-
         val keysInRows = createRows(baseKeys)
         val heightRescale: Float
         if (params.mId.isEmojiClipBottomRow) {
