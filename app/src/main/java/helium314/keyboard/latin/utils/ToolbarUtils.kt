@@ -71,10 +71,21 @@ class TagDrawable(private val text: String) : Drawable() {
         strokeWidth = 3f
     }
 
+    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(35, 255, 255, 255)
+        style = Paint.Style.FILL
+    }
+
     override fun draw(canvas: Canvas) {
         val bounds = bounds
         val cx = bounds.exactCenterX()
         val cy = bounds.exactCenterY()
+
+        // Apply theme's active color/tint filter dynamically to all paints
+        val activeFilter = colorFilter
+        paint.colorFilter = activeFilter
+        borderPaint.colorFilter = activeFilter
+        fillPaint.colorFilter = activeFilter
 
         // Scaled text size based on height
         paint.textSize = bounds.height() * 0.4f
@@ -83,6 +94,9 @@ class TagDrawable(private val text: String) : Drawable() {
         val rect = RectF(bounds)
         rect.inset(4f, 4f)
         val rx = bounds.height() * 0.15f
+
+        // Draw themed fill, border, and text
+        canvas.drawRoundRect(rect, rx, rx, fillPaint)
         canvas.drawRoundRect(rect, rx, rx, borderPaint)
 
         // Draw centered text
@@ -94,11 +108,13 @@ class TagDrawable(private val text: String) : Drawable() {
     override fun setAlpha(alpha: Int) {
         paint.alpha = alpha
         borderPaint.alpha = alpha
+        fillPaint.alpha = (alpha * 0.137f).toInt()
     }
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
         paint.colorFilter = colorFilter
         borderPaint.colorFilter = colorFilter
+        fillPaint.colorFilter = colorFilter
     }
 
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
