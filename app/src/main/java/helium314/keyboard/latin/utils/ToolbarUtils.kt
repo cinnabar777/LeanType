@@ -68,17 +68,6 @@ class TagDrawable(private val text: String) : Drawable() {
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
     }
 
-    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        style = Paint.Style.STROKE
-        strokeWidth = 3f
-    }
-
-    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(35, 255, 255, 255)
-        style = Paint.Style.FILL
-    }
-
     private var tintList: ColorStateList? = null
     private var tintMode: PorterDuff.Mode = PorterDuff.Mode.MULTIPLY
     private var tintFilter: ColorFilter? = null
@@ -130,24 +119,13 @@ class TagDrawable(private val text: String) : Drawable() {
         val cx = bounds.exactCenterX()
         val cy = bounds.exactCenterY()
 
-        // Apply theme's active color/tint filter dynamically to all paints
+        // Apply theme's active color/tint filter dynamically to text paint
         val activeFilter = tintFilter ?: internalColorFilter
         paint.colorFilter = activeFilter
-        borderPaint.colorFilter = activeFilter
-        fillPaint.colorFilter = activeFilter
 
         // Scaled text size based on height
-        paint.textSize = bounds.height() * 0.4f
+        paint.textSize = bounds.height() * 0.45f
         
-        // Border capsule
-        val rect = RectF(bounds)
-        rect.inset(4f, 4f)
-        val rx = bounds.height() * 0.15f
-
-        // Draw themed fill, border, and text
-        canvas.drawRoundRect(rect, rx, rx, fillPaint)
-        canvas.drawRoundRect(rect, rx, rx, borderPaint)
-
         // Draw centered text
         val textHeight = paint.descent() - paint.ascent()
         val textOffset = textHeight / 2 - paint.descent()
@@ -156,8 +134,6 @@ class TagDrawable(private val text: String) : Drawable() {
 
     override fun setAlpha(alpha: Int) {
         paint.alpha = alpha
-        borderPaint.alpha = alpha
-        fillPaint.alpha = (alpha * 0.137f).toInt()
     }
 
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
