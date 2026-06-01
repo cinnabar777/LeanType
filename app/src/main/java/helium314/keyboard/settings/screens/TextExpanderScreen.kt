@@ -276,6 +276,8 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                                                 PlaceholderChip(tag = "%time12%", desc = "Time (12h, hh:mm AM/PM)")
                                                 PlaceholderChip(tag = "%year%", desc = "Year (YYYY)")
                                                 PlaceholderChip(tag = "%week%", desc = "Week of year (1-53)")
+                                                PlaceholderChip(tag = "%battery%", desc = "Battery level (e.g. 85%)")
+                                                PlaceholderChip(tag = "%device%", desc = "Phone model (e.g. POCO M2)")
                                             }
                                             Column(modifier = Modifier.weight(1.1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                                 PlaceholderChip(tag = "%clipboard%", desc = "Clipboard content")
@@ -283,6 +285,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                                                 PlaceholderChip(tag = "%day_short%", desc = "Day short (e.g. Mon)")
                                                 PlaceholderChip(tag = "%month%", desc = "Month (e.g. June)")
                                                 PlaceholderChip(tag = "%month_short%", desc = "Month short (e.g. Jun)")
+                                                PlaceholderChip(tag = "%android%", desc = "Android OS (e.g. 14)")
                                             }
                                         }
                                     }
@@ -490,7 +493,7 @@ fun TextExpanderScreen(onClickBack: () -> Unit) {
                         val tags = listOf(
                             "%date%", "%time%", "%time12%", "%clipboard%",
                             "%day%", "%day_short%", "%month%", "%month_short%",
-                            "%year%", "%week%"
+                            "%year%", "%week%", "%battery%", "%device%", "%android%"
                         )
                         tags.forEach { tag ->
                             Box(

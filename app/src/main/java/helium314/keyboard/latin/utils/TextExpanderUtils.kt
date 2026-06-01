@@ -123,6 +123,26 @@ object TextExpanderUtils {
             result = result.replace("%week%", weekStr)
         }
 
+        // Resolve %battery%
+        if (result.contains("%battery%")) {
+            val bm = context.getSystemService(Context.BATTERY_SERVICE) as? android.os.BatteryManager
+            val level = bm?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+            val batteryStr = if (level != -1) "$level%" else ""
+            result = result.replace("%battery%", batteryStr)
+        }
+
+        // Resolve %device%
+        if (result.contains("%device%")) {
+            val deviceStr = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}"
+            result = result.replace("%device%", deviceStr)
+        }
+
+        // Resolve %android%
+        if (result.contains("%android%")) {
+            val androidStr = android.os.Build.VERSION.RELEASE
+            result = result.replace("%android%", androidStr)
+        }
+
         return result
     }
 
