@@ -258,7 +258,13 @@ class ClipboardHistoryManager(
             val cacheDir = java.io.File(latinIME.cacheDir, "clipboard_images")
             if (!cacheDir.exists()) cacheDir.mkdirs()
             
-            val file = java.io.File(cacheDir, "img_${System.currentTimeMillis()}.jpg")
+            val md = java.security.MessageDigest.getInstance("MD5")
+            val digest = md.digest(uri.toString().toByteArray())
+            val hash = digest.joinToString("") { "%02x".format(it) }
+            val file = java.io.File(cacheDir, "img_${hash}.jpg")
+            if (file.exists() && file.length() > 0) {
+                return file.absolutePath
+            }
             
             resolver.openInputStream(uri)?.use { input ->
                 val options = android.graphics.BitmapFactory.Options().apply {
