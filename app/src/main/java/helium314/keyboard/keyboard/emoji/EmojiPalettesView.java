@@ -721,6 +721,7 @@ public final class EmojiPalettesView extends LinearLayout
 
         KeyboardLayoutSet kls = builder.build();
         bottomRow.setKeyboard(kls.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
+        bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
 
         // Focus
         mSearchBar.requestFocus();
@@ -833,6 +834,7 @@ public final class EmojiPalettesView extends LinearLayout
         if (keyboardView == null || !this.isAttachedToWindow()) {
             return;
         }
+        keyboardView.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
         EditorInfo ei = editorInfo != null ? editorInfo : mEditorInfo;
         keyboardView.setKeyboardActionListener(keyboardActionListener);
 

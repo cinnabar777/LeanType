@@ -414,6 +414,7 @@ class ClipboardHistoryView @JvmOverloads constructor(
     private fun setBottomRowLayout(elementId: Int) {
         val editorInfo = this.editorInfo ?: return
         val keyboardView = findViewById<MainKeyboardView>(R.id.bottom_row_keyboard)
+        keyboardView.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn)
         keyboardView.setKeyboardActionListener(this)  // Set 'this' as listener to intercept
         PointerTracker.switchTo(keyboardView)
         val kls = KeyboardLayoutSet.Builder.buildEmojiClipBottomRow(context, editorInfo)

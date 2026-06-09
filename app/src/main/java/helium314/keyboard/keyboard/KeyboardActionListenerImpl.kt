@@ -564,6 +564,8 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             override fun onDoubleTap() {
                 if (connection.hasSelection()) {
                     onCodeInput(KeyCode.DELETE, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
+                } else {
+                    onCodeInput(KeyCode.CLIPBOARD_SELECT_WORD, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE, false)
                 }
             }
             override fun onScroll(direction: Int) {
