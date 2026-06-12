@@ -32,6 +32,8 @@ public class TouchpadView extends LinearLayout {
         void onSingleTap();
         void onDoubleTap();
         void onScroll(int direction);
+        void onTwoFingerDoubleTap();
+        void onThreeFingerTap();
     }
 
     private TouchpadListener mListener;
@@ -50,12 +52,25 @@ public class TouchpadView extends LinearLayout {
 
     // Two-finger scroll tracking
     private boolean mIsTwoFingerScroll;
+    private float mTwoFingerLastX;
     private float mTwoFingerLastY;
+    private float mScrollAccX;
     private float mScrollAccY;
     
     // Two-finger tap tracking
     private boolean mIsTwoFingerTap;
     private long mTwoFingerDownTime;
+    private long mLastTwoFingerTapTime = 0;
+    private final Runnable mTwoFingerTapRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mListener != null) mListener.onSingleTap();
+        }
+    };
+
+    // Three-finger tap tracking
+    private boolean mIsThreeFingerTap;
+    private long mThreeFingerDownTime;
 
     private static final int SCROLL_THRESHOLD = 40;
 
@@ -164,17 +179,41 @@ public class TouchpadView extends LinearLayout {
                         mIsTwoFingerTap = true;
                         mTwoFingerDownTime = System.currentTimeMillis();
                         mIsDragging = false;
+                        mTwoFingerLastX = (event.getX(0) + event.getX(1)) / 2f;
                         mTwoFingerLastY = (event.getY(0) + event.getY(1)) / 2f;
+                        mScrollAccX = 0;
                         mScrollAccY = 0;
+                    } else if (pointerCount == 3) {
+                        mIsThreeFingerTap = true;
+                        mThreeFingerDownTime = System.currentTimeMillis();
+                        mIsTwoFingerScroll = false;
+                        mIsTwoFingerTap = false;
+                        mIsDragging = false;
                     }
                     return true;
 
                 case MotionEvent.ACTION_MOVE:
                     if (mIsTwoFingerScroll && pointerCount >= 2) {
+                        float midX = (event.getX(0) + event.getX(1)) / 2f;
                         float midY = (event.getY(0) + event.getY(1)) / 2f;
+                        float deltaX = midX - mTwoFingerLastX;
                         float deltaY = midY - mTwoFingerLastY;
+                        mTwoFingerLastX = midX;
                         mTwoFingerLastY = midY;
+
+                        mScrollAccX += deltaX;
                         mScrollAccY += deltaY;
+
+                        while (mScrollAccX >= SCROLL_THRESHOLD) {
+                            mIsTwoFingerTap = false;
+                            if (mListener != null) mListener.onScroll(KeyCode.WORD_RIGHT);
+                            mScrollAccX -= SCROLL_THRESHOLD;
+                        }
+                        while (mScrollAccX <= -SCROLL_THRESHOLD) {
+                            mIsTwoFingerTap = false;
+                            if (mListener != null) mListener.onScroll(KeyCode.WORD_LEFT);
+                            mScrollAccX += SCROLL_THRESHOLD;
+                        }
 
                         while (mScrollAccY >= SCROLL_THRESHOLD) {
                             mIsTwoFingerTap = false;
@@ -225,6 +264,7 @@ public class TouchpadView extends LinearLayout {
                     mIsDragging = false;
                     mIsTwoFingerScroll = false;
                     mIsTwoFingerTap = false;
+                    mIsThreeFingerTap = false;
                     if (mSelectionMode) {
                         mSelectionMode = false;
                         applySurfaceColor();
@@ -234,10 +274,23 @@ public class TouchpadView extends LinearLayout {
                 case MotionEvent.ACTION_POINTER_UP:
                     if (pointerCount == 2) {
                         if (mIsTwoFingerTap && (System.currentTimeMillis() - mTwoFingerDownTime) < 300) {
-                            if (mListener != null) mListener.onSingleTap();
+                            long now = System.currentTimeMillis();
+                            if (now - mLastTwoFingerTapTime < 350) {
+                                removeCallbacks(mTwoFingerTapRunnable);
+                                if (mListener != null) mListener.onTwoFingerDoubleTap();
+                                mLastTwoFingerTapTime = 0;
+                            } else {
+                                mLastTwoFingerTapTime = now;
+                                postDelayed(mTwoFingerTapRunnable, 250);
+                            }
                         }
                         mIsTwoFingerScroll = false;
                         mIsTwoFingerTap = false;
+                    } else if (pointerCount == 3) {
+                        if (mIsThreeFingerTap && (System.currentTimeMillis() - mThreeFingerDownTime) < 300) {
+                            if (mListener != null) mListener.onThreeFingerTap();
+                        }
+                        mIsThreeFingerTap = false;
                     }
                     return true;
             }

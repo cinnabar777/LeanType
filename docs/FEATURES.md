@@ -327,7 +327,9 @@ Touchpad Mode replaces the keyboard with a laptop-style touchpad overlay to cont
 
 ### Touchpad Gestures
 *   **Single-finger drag**: Moves the cursor in 2D space (simulating arrow keys left/right/up/down) to navigate text.
-*   **Two-finger drag**: Performs fast vertical scrolling (simulating arrow keys up/down).
-*   **Two-finger tap**: Simulates a mouse click/Enter.
-*   **Long press (hold finger)**: Activates text selection mode. Dragging while holding will select text. Releasing the finger exits selection mode.
+*   **Two-finger drag**: Moves the cursor vertically (scrolling up/down) or horizontally (word-by-word navigation).
+*   **Two-finger tap**: Simulates Enter.
+*   **Two-finger double tap**: Copies selected text (or Selects All if no selection exists).
+*   **Three-finger tap**: Pastes clipboard contents at the cursor.
+*   **Long press (hold finger)**: Activates text selection mode. Dragging while holding will select text.
 *   **Double tap by single finger**: Selects the word under the cursor.
