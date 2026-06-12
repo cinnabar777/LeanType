@@ -19,6 +19,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.nehuatl.llamacpp.LlamaHelper
 import java.io.File
 
@@ -50,6 +53,7 @@ class ProofreadService(private val context: Context) {
         private var unloadJob: Job? = null
         private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
         private const val UNLOAD_DELAY_MS = 10 * 60 * 1000L // 10 minutes
+        private val loadMutex = Mutex()
 
         // Flow for LLM events
         val llmFlow = MutableSharedFlow<LlamaHelper.LLMEvent>(
@@ -95,11 +99,10 @@ class ProofreadService(private val context: Context) {
             isModelAvailable = true
         }
 
-        @Synchronized
-        fun loadModel(
+        suspend fun loadModel(
             context: Context,
             modelPath: String
-        ): Boolean {
+        ): Boolean = loadMutex.withLock {
             cancelUnload()
 
             // Check if already loaded with same path
@@ -117,18 +120,71 @@ class ProofreadService(private val context: Context) {
                     llmFlow
                 )
 
-                // Load the model with default context length
-                val contextLength = 2048
-                var loadSuccess = false
-                helper.load(
-                    path = modelPath,
-                    contextLength = contextLength
-                ) { _ ->
-                    loadSuccess = true
+                // Get llama via reflection
+                val llamaField = LlamaHelper::class.java.getDeclaredField("llama\$delegate").apply { isAccessible = true }
+                val llamaLazy = llamaField.get(helper) as Lazy<org.nehuatl.llamacpp.LlamaAndroid>
+                val llama = llamaLazy.value
+
+                // Detach model file descriptor
+                val uri = android.net.Uri.parse(modelPath)
+                val pfd = contentResolver.openFileDescriptor(uri, "r")
+                    ?: throw IllegalArgumentException("Failed to open model file descriptor")
+                val modelFd = pfd.detachFd()
+
+                // Calculate optimal threads count (4 threads is the sweet spot for mobile CPUs)
+                val cores = Runtime.getRuntime().availableProcessors()
+                val threads = if (cores <= 4) cores else 4
+                
+                Log.i(TAG, "Loading GGUF model: threads=$threads (cores=$cores), use_mmap=true")
+
+                // Construct parameters map
+                val params = mutableMapOf<String, Any>(
+                    "model" to modelPath,
+                    "model_fd" to modelFd,
+                    "use_mmap" to true,
+                    "use_mlock" to false,
+                    "n_ctx" to 2048,
+                    "embedding" to false,
+                    "n_batch" to 512,
+                    "n_threads" to threads,
+                    "n_gpu_layers" to 0,
+                    "vocab_only" to false,
+                    "lora" to "",
+                    "lora_scaled" to 1.0,
+                    "rope_freq_base" to 0.0,
+                    "rope_freq_scale" to 0.0
+                )
+
+                // JNI callback called by native code for each token
+                val callback: (String) -> Unit = { word ->
+                    try {
+                        val allTextField = LlamaHelper::class.java.getDeclaredField("allText").apply { isAccessible = true }
+                        val currentAllText = allTextField.get(helper) as String
+                        allTextField.set(helper, currentAllText + word)
+
+                        val tokenCountField = LlamaHelper::class.java.getDeclaredField("tokenCount").apply { isAccessible = true }
+                        val currentCount = tokenCountField.get(helper) as Int
+                        tokenCountField.set(helper, currentCount + 1)
+
+                        helper.sharedFlow.tryEmit(LlamaHelper.LLMEvent.Ongoing(word, currentCount + 1))
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Error in native token callback", e)
+                    }
                 }
 
-                // Give the model a moment to load (it's async internally)
-                // We'll verify on first inference if it's truly loaded
+                // Start the engine
+                val result = llama.startEngine(params, callback)
+
+                val contextId = result?.get("contextId") as? Int
+                    ?: throw IllegalStateException("contextId not found in result map")
+
+                // Set currentContext via reflection
+                val currentContextField = LlamaHelper::class.java.getDeclaredField("currentContext").apply { isAccessible = true }
+                currentContextField.set(helper, contextId)
+
+                // Emit Loaded event
+                helper.sharedFlow.tryEmit(LlamaHelper.LLMEvent.Loaded(modelPath))
+
                 llamaHelper = helper
                 currentModelPath = modelPath
                 isModelLoaded = true
@@ -332,20 +388,21 @@ class ProofreadService(private val context: Context) {
             )
             
             // Collect events until done
-            ModelHolder.llmFlow.collect { event ->
+            ModelHolder.llmFlow.takeWhile { event ->
                 when (event) {
                     is LlamaHelper.LLMEvent.Ongoing -> {
                         generatedText.append(event.word)
+                        true
                     }
                     is LlamaHelper.LLMEvent.Done -> {
-                        return@collect
+                        false
                     }
                     is LlamaHelper.LLMEvent.Error -> {
                         throw ProofreadException(event.toString())
                     }
-                    else -> { /* Ignore other events */ }
+                    else -> true
                 }
-            }
+            }.collect {}
 
             // Schedule unload after work is done
             ModelHolder.scheduleUnload(context)
@@ -373,6 +430,20 @@ class ProofreadService(private val context: Context) {
             }
 
         } catch (e: Throwable) {
+            if (e is kotlinx.coroutines.CancellationException) {
+                // Cancel completion job if running
+                try {
+                    val helper = ModelHolder.llamaHelper
+                    if (helper != null) {
+                        val completionJobField = LlamaHelper::class.java.getDeclaredField("completionJob").apply { isAccessible = true }
+                        val completionJob = completionJobField.get(helper) as? Job
+                        completionJob?.cancel()
+                    }
+                } catch (ex: Throwable) {
+                    Log.w(TAG, "Failed to cancel completion job", ex)
+                }
+                throw e
+            }
             Log.e(TAG, "Proofread failed", e)
             ModelHolder.scheduleUnload(context) // Ensure we still schedule unload on error
             Result.failure(ProofreadException(e.message ?: "Unknown error"))
