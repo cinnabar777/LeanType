@@ -49,6 +49,10 @@ object HandwritingLoader {
 
     fun importPlugin(context: Context, uri: Uri): Boolean {
         try {
+            try {
+                context.codeCacheDir.deleteRecursively()
+            } catch (_: Exception) {}
+
             val apkFile = File(context.filesDir, PLUGIN_FILENAME)
             context.contentResolver.openInputStream(uri)?.use { input ->
                 apkFile.outputStream().use { output ->
@@ -76,6 +80,9 @@ object HandwritingLoader {
             try {
                 File(context.filesDir, PLUGIN_FILENAME).delete()
             } catch (_: Exception) {}
+            try {
+                context.codeCacheDir.deleteRecursively()
+            } catch (_: Exception) {}
             context.prefs().edit().putBoolean(PREF_HAS_PLUGIN, false).apply()
             activeRecognizer = null
         }
@@ -85,6 +92,9 @@ object HandwritingLoader {
     fun removePlugin(context: Context) {
         try {
             File(context.filesDir, PLUGIN_FILENAME).delete()
+        } catch (_: Exception) {}
+        try {
+            context.codeCacheDir.deleteRecursively()
         } catch (_: Exception) {}
         context.prefs().edit().putBoolean(PREF_HAS_PLUGIN, false).apply()
         activeRecognizer = null
