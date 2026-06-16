@@ -89,6 +89,41 @@ class HandwritingView @JvmOverloads constructor(
         }
 
         clearCanvasAndComposition()
+
+        val recognizer = HandwritingLoader.getRecognizer(context)
+        if (recognizer != null) {
+            recognizer.setLanguage(language)
+            recognitionExecutor.execute {
+                val isReady = recognizer.isLanguageReady(language)
+                mainHandler.post {
+                    if (!isReady) {
+                        languageLabel.text = "$language (Downloading...)"
+                        recognizer.downloadModel(language, object : ModelDownloadListener {
+                            override fun onProgress(progress: Float) {
+                                mainHandler.post {
+                                    languageLabel.text = "$language (Downloading ${"%.0f".format(progress * 100)}%)"
+                                }
+                            }
+                            override fun onComplete(success: Boolean) {
+                                mainHandler.post {
+                                    if (success) {
+                                        languageLabel.text = language
+                                        android.widget.Toast.makeText(context, "Handwriting model downloaded", android.widget.Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        languageLabel.text = "$language (Download failed)"
+                                        android.widget.Toast.makeText(context, "Failed to download handwriting model", android.widget.Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }
+                        })
+                    } else {
+                        languageLabel.text = language
+                    }
+                }
+            }
+        } else {
+            android.widget.Toast.makeText(context, "Please load handwriting plugin in Settings -> Libraries hub", android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
     fun stopHandwriting() {
@@ -126,62 +161,74 @@ class HandwritingView @JvmOverloads constructor(
         }
     }
 
+    private val recognitionExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     private fun performRecognition(strokes: List<FloatArray>) {
         if (strokes.isEmpty()) return
         val recognizer = HandwritingLoader.getRecognizer(context) ?: return
-        
-        // Ensure language is set
+
+        // setLanguage is fast (no blocking I/O), safe on main thread
         recognizer.setLanguage(currentLanguage)
-        
-        val results = recognizer.recognize(strokes)
-        if (results.isNullOrEmpty()) return
 
-        val mainCandidate = results[0]
-        currentComposingText = mainCandidate
+        // recognize() uses Tasks.await() which must not run on main thread
+        recognitionExecutor.execute {
+            try {
+                val results = recognizer.recognize(strokes)
+                if (results.isNullOrEmpty()) return@execute
 
-        val latinIME = KeyboardSwitcher.getInstance().latinIME ?: return
-        val ic = latinIME.currentInputConnection ?: return
-        
-        // Update composing text
-        ic.setComposingText(mainCandidate, 1)
+                mainHandler.post {
+                    val mainCandidate = results[0]
+                    currentComposingText = mainCandidate
 
-        // Populate suggestion strip with alternative candidates
-        val suggestionInfos = ArrayList<SuggestedWordInfo>()
-        for (word in results) {
-            suggestionInfos.add(
-                SuggestedWordInfo(
-                    word,
-                    "",
-                    SuggestedWordInfo.MAX_SCORE,
-                    SuggestedWordInfo.KIND_TYPED,
-                    Dictionary.DICTIONARY_USER_TYPED,
-                    SuggestedWordInfo.NOT_AN_INDEX,
-                    SuggestedWordInfo.NOT_A_CONFIDENCE
-                )
-            )
+                    val latinIME = KeyboardSwitcher.getInstance().latinIME ?: return@post
+                    val ic = latinIME.currentInputConnection ?: return@post
+
+                    // Update composing text
+                    ic.setComposingText(mainCandidate, 1)
+
+                    // Populate suggestion strip with alternative candidates
+                    val suggestionInfos = ArrayList<SuggestedWordInfo>()
+                    for (word in results) {
+                        suggestionInfos.add(
+                            SuggestedWordInfo(
+                                word,
+                                "",
+                                SuggestedWordInfo.MAX_SCORE,
+                                SuggestedWordInfo.KIND_TYPED,
+                                Dictionary.DICTIONARY_USER_TYPED,
+                                SuggestedWordInfo.NOT_AN_INDEX,
+                                SuggestedWordInfo.NOT_A_CONFIDENCE
+                            )
+                        )
+                    }
+
+                    val typedWordInfo = SuggestedWordInfo(
+                        mainCandidate,
+                        "",
+                        SuggestedWordInfo.MAX_SCORE,
+                        SuggestedWordInfo.KIND_TYPED,
+                        Dictionary.DICTIONARY_USER_TYPED,
+                        SuggestedWordInfo.NOT_AN_INDEX,
+                        SuggestedWordInfo.NOT_A_CONFIDENCE
+                    )
+
+                    val suggestedWords = SuggestedWords(
+                        suggestionInfos,
+                        null,
+                        typedWordInfo,
+                        false,
+                        false,
+                        false,
+                        SuggestedWords.INPUT_STYLE_TYPING,
+                        SuggestedWords.NOT_A_SEQUENCE_NUMBER
+                    )
+                    latinIME.setSuggestions(suggestedWords)
+                }
+            } catch (e: Exception) {
+                Log.e("HandwritingView", "Error during recognition", e)
+            }
         }
-
-        val typedWordInfo = SuggestedWordInfo(
-            mainCandidate,
-            "",
-            SuggestedWordInfo.MAX_SCORE,
-            SuggestedWordInfo.KIND_TYPED,
-            Dictionary.DICTIONARY_USER_TYPED,
-            SuggestedWordInfo.NOT_AN_INDEX,
-            SuggestedWordInfo.NOT_A_CONFIDENCE
-        )
-
-        val suggestedWords = SuggestedWords(
-            suggestionInfos,
-            null,
-            typedWordInfo,
-            false,
-            false,
-            false,
-            SuggestedWords.INPUT_STYLE_TYPING,
-            SuggestedWords.NOT_A_SEQUENCE_NUMBER
-        )
-        latinIME.setSuggestions(suggestedWords)
     }
 
     // Intercept KeyboardActionListener events for the bottom row

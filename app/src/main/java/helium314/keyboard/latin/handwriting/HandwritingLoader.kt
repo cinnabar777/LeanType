@@ -24,6 +24,7 @@ object HandwritingLoader {
             context.prefs().edit().putBoolean(PREF_HAS_PLUGIN, false).apply()
             return null
         }
+        apkFile.setReadOnly()
 
         try {
             val md5 = java.security.MessageDigest.getInstance("MD5")
@@ -63,11 +64,15 @@ object HandwritingLoader {
             } catch (_: Exception) {}
 
             val apkFile = File(context.filesDir, PLUGIN_FILENAME)
+            if (apkFile.exists()) {
+                apkFile.delete()
+            }
             context.contentResolver.openInputStream(uri)?.use { input ->
                 apkFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
+            apkFile.setReadOnly()
 
             // Verify the plugin loads successfully
             val classLoader = DexClassLoader(

@@ -241,6 +241,17 @@ dependencies {
     // Force 16 KB page-aligned version of graphics-path
     implementation("androidx.graphics:graphics-path:1.1.0")
 
+    // WorkManager — required by ML Kit Digital Ink plugin (loaded via DexClassLoader).
+    // ML Kit internally calls WorkManager.getInstance(context) using the host app context,
+    // so the host app must have WorkManagerInitializer registered in its manifest.
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
+
+    // ML Kit Digital Ink Recognition — required by the handwriting plugin.
+    // ML Kit's internal asset manager and native library loader use the host app context,
+    // so the host app must compile and include the client library resources/libraries.
+    "standardImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0")
+    "standardOptimisedImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0")
+
     // test
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")

@@ -457,7 +457,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
         if (mHandwritingView != null) {
             final RichInputMethodSubtype subtype = mRichImm.getCurrentSubtype();
-            final String language = subtype.getLocale().getLanguage();
+            final String language = subtype.getLocale().toLanguageTag();
             mHandwritingView.startHandwriting(
                     mLatinIME.getCurrentInputEditorInfo(),
                     mLatinIME.mKeyboardActionListener,
