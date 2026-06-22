@@ -8,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.ProgressBar
 import android.graphics.drawable.GradientDrawable
 import helium314.keyboard.keyboard.KeyboardActionListener
 import helium314.keyboard.keyboard.KeyboardId
@@ -41,6 +42,8 @@ class HandwritingView @JvmOverloads constructor(
     private lateinit var clearButton: ImageButton
     private lateinit var canvas: HandwritingCanvas
     private lateinit var bottomRowKeyboard: MainKeyboardView
+    private lateinit var downloadProgress: ProgressBar
+    private var toolbar: View? = null // ponytail: track toolbar
 
     private var keyboardActionListener: KeyboardActionListener? = null
     private var editorInfo: EditorInfo? = null
@@ -54,6 +57,8 @@ class HandwritingView @JvmOverloads constructor(
         clearButton = findViewById(R.id.handwriting_clear_button)
         canvas = findViewById(R.id.handwriting_canvas)
         bottomRowKeyboard = findViewById(R.id.handwriting_bottom_row_keyboard)
+        downloadProgress = findViewById(R.id.handwriting_download_progress)
+        toolbar = findViewById(R.id.handwriting_toolbar)
 
         clearButton.setOnClickListener {
             clearCanvasAndComposition()
@@ -80,9 +85,9 @@ class HandwritingView @JvmOverloads constructor(
         this.currentLanguage = language
 
         val colors = Settings.getValues().mColors
-        val toolbar = findViewById<View>(R.id.handwriting_toolbar)
-        if (toolbar != null) {
-            colors.setBackground(toolbar, ColorType.MAIN_BACKGROUND)
+        toolbar?.let {
+            colors.setBackground(it, ColorType.MAIN_BACKGROUND)
+            it.visibility = View.GONE // ponytail: hide by default to avoid duplicate toolbar/X buttons
         }
         colors.setBackground(canvas, ColorType.MAIN_BACKGROUND)
 
@@ -91,6 +96,7 @@ class HandwritingView @JvmOverloads constructor(
         canvas.setStrokeColor(colors.get(ColorType.KEY_TEXT))
 
         languageLabel.text = language
+        downloadProgress.visibility = View.GONE
 
         // Setup bottom row keyboard
         bottomRowKeyboard.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn)
@@ -161,19 +167,27 @@ class HandwritingView @JvmOverloads constructor(
                 val isReady = recognizer.isLanguageReady(language)
                 mainHandler.post {
                     if (!isReady) {
+                        toolbar?.visibility = View.VISIBLE // ponytail: show for download progress
                         languageLabel.text = "$language (Downloading...)"
+                        downloadProgress.visibility = View.VISIBLE
+                        downloadProgress.progress = 0
                         recognizer.downloadModel(language, object : ModelDownloadListener {
                             override fun onProgress(progress: Float) {
                                 mainHandler.post {
-                                    languageLabel.text = "$language (Downloading ${"%.0f".format(progress * 100)}%)"
+                                    val percent = (progress * 100).toInt()
+                                    languageLabel.text = "$language (Downloading $percent%)"
+                                    downloadProgress.progress = percent
                                 }
                             }
                             override fun onComplete(success: Boolean) {
                                 mainHandler.post {
+                                    downloadProgress.visibility = View.GONE
                                     if (success) {
+                                        toolbar?.visibility = View.GONE // ponytail: hide when done
                                         languageLabel.text = language
                                         android.widget.Toast.makeText(context, "Handwriting model downloaded", android.widget.Toast.LENGTH_SHORT).show()
                                     } else {
+                                        toolbar?.visibility = View.VISIBLE
                                         languageLabel.text = "$language (Download failed)"
                                         android.widget.Toast.makeText(context, "Failed to download handwriting model", android.widget.Toast.LENGTH_LONG).show()
                                     }
@@ -181,7 +195,9 @@ class HandwritingView @JvmOverloads constructor(
                             }
                         })
                     } else {
+                        toolbar?.visibility = View.GONE // ponytail: hide when already downloaded
                         languageLabel.text = language
+                        downloadProgress.visibility = View.GONE
                     }
                 }
             }
