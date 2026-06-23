@@ -118,12 +118,27 @@ android {
         }
         // got a little too big for GitHub after some dependency upgrades, so we remove the largest dictionary
         androidComponents.onVariants { variant: ApplicationVariant ->
+            val patterns = mutableListOf<String>()
             if (variant.buildType == "debug") {
-                variant.androidResources.ignoreAssetsPatterns = listOf("main_ro.dict")
+                patterns.add("main_ro.dict")
                 variant.proguardFiles = emptyList()
                 //noinspection ProguardAndroidTxtUsage we intentionally use the "normal" file here
                 variant.proguardFiles.add(project.layout.buildDirectory.file(getDefaultProguardFile("proguard-android.txt").absolutePath))
                 variant.proguardFiles.add(project.layout.buildDirectory.file(project.buildFile.parent + "/proguard-rules.pro"))
+            }
+            if (variant.flavorName == "standard") {
+                // ponytail: dynamically find all dict files to ignore in standard flavor except main_en-US.dict
+                val dictsDir = project.file("src/main/assets/dicts")
+                if (dictsDir.exists() && dictsDir.isDirectory) {
+                    dictsDir.listFiles()?.forEach { file ->
+                        if (file.name.endsWith(".dict") && file.name != "main_en-US.dict") {
+                            patterns.add(file.name)
+                        }
+                    }
+                }
+            }
+            if (patterns.isNotEmpty()) {
+                variant.androidResources.ignoreAssetsPatterns = patterns
             }
         }
     }
