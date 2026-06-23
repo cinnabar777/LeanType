@@ -26,6 +26,9 @@
 - **🎨 Modern UI** - "Squircle" key backgrounds, refined icons, and polished aesthetics.
 - **🔄 Google Dictionary Import** - Easily import your personal dictionary words.
 - **📥 Dynamic Downloader** - Standard version dynamically downloads layout dictionaries, emoji dictionaries, and handwriting plugins on demand, keeping initial app size small.
+- **💾 Selective Backup & Restore** - Backup and restore settings, dictionaries, and AI prompt configurations selectively.
+- **🚫 Blocked Words Blacklist** - Prevent unwanted words from being suggested, with custom regex pattern support and a blacklist management screen.
+- **✉️ Auto-Read OTP** - Automatically reads OTP codes from SMS notifications for quick and easy suggestion strip entry.
 - **⚙️ Enhanced Customization** - Force auto-capitalization toggle, reorganized settings, and more.
 - **🕵️ Clear Incognito Mode** - Distinct "Hat & Glasses" icon for clear visibility.
 - **🔍 Clipboard Search & Undo** - Search through your clipboard history directly from the toolbar, undo accidental item deletions, and fold/collapse pinned items by default to save space.
