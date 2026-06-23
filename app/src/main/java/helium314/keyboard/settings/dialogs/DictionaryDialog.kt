@@ -36,6 +36,7 @@ import helium314.keyboard.latin.common.LocaleUtils.localizedDisplayName
 import helium314.keyboard.latin.utils.DictionaryInfoUtils
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.createDictionaryTextAnnotated
+import helium314.keyboard.latin.utils.DownloadableDictionaryRow
 import helium314.keyboard.settings.DeleteButton
 import helium314.keyboard.settings.ExpandButton
 import helium314.keyboard.settings.Theme
@@ -217,84 +218,6 @@ private fun DictionaryDetails(dict: File, onDelete: () -> Unit) {
         )
 }
 
-// ponytail: Dynamic dictionary downloader using HTTP URL connection.
-private fun downloadDictionary(context: Context, locale: Locale, type: String, linkUrl: String, onComplete: (Boolean) -> Unit) {
-    val cacheDir = DictionaryInfoUtils.getCacheDirectoryForLocale(locale, context) ?: return onComplete(false)
-    val targetFile = File(cacheDir, "${type}.dict")
-    CoroutineScope(Dispatchers.IO).launch {
-        var success = false
-        try {
-            java.net.URL(linkUrl).openStream().use { input ->
-                targetFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-            success = true
-        } catch (e: Exception) {
-            helium314.keyboard.latin.utils.Log.e("DictionaryDialog", "Failed to download dictionary", e)
-        }
-        withContext(Dispatchers.Main) {
-            onComplete(success)
-        }
-    }
-}
-
-@Composable
-private fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefresh: () -> Unit) {
-    val ctx = LocalContext.current
-    val type = remember(link) { link.substringAfterLast("/").substringBefore("_") }
-    val cacheDir = remember(locale) { DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx) }
-    val file = remember(cacheDir, type) { cacheDir?.let { File(it, "$type.dict") } }
-    var downloading by remember { mutableStateOf(false) }
-    var exists by remember(file) { mutableStateOf(file?.exists() == true) }
-
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-    ) {
-        Text(desc, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        if (exists) {
-            var showDeleteDialog by remember { mutableStateOf(false) }
-            androidx.compose.material3.TextButton(onClick = { showDeleteDialog = true }) {
-                Text(stringResource(R.string.remove), color = MaterialTheme.colorScheme.error)
-            }
-            if (showDeleteDialog) {
-                ConfirmationDialog(
-                    onDismissRequest = { showDeleteDialog = false },
-                    confirmButtonText = stringResource(R.string.remove),
-                    onConfirmed = { 
-                        file?.delete()
-                        exists = false
-                        onRefresh()
-                    },
-                    content = { Text(stringResource(R.string.remove_dictionary_message, type)) }
-                )
-            }
-        } else if (downloading) {
-            Text(
-                stringResource(R.string.downloading),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-        } else {
-            androidx.compose.material3.TextButton(onClick = {
-                downloading = true
-                downloadDictionary(ctx, locale, type, link) { success ->
-                    downloading = false
-                    if (success) {
-                        exists = true
-                        onRefresh()
-                    } else {
-                        android.widget.Toast.makeText(ctx, ctx.getString(R.string.download_failed), android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }) {
-                Text(stringResource(R.string.download))
-            }
-        }
-    }
-}
 
 @Preview
 @Composable

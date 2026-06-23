@@ -3,11 +3,23 @@
 package helium314.keyboard.latin.utils
 
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import helium314.keyboard.compat.locale
 import helium314.keyboard.latin.R
@@ -19,6 +31,10 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.settings.dialogs.ConfirmationDialog
 import java.io.File
 import java.util.Locale
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 fun getDictionaryLocales(context: Context): MutableSet<Locale> {
     val locales = HashSet<Locale>()
@@ -36,12 +52,22 @@ fun getDictionaryLocales(context: Context): MutableSet<Locale> {
             locales.add(DictionaryInfoUtils.extractLocaleFromAssetsDictionaryFile(dictionary))
         }
     }
+    // ponytail: include enabled locales and multilingual secondary locales
+    SubtypeSettings.getEnabledSubtypes().forEach { subtype ->
+        locales.add(subtype.locale())
+        getSecondaryLocales(subtype.extraValue).forEach { locales.add(it) }
+    }
+    SubtypeSettings.getAdditionalSubtypes().forEach { subtype ->
+        locales.add(subtype.locale())
+        getSecondaryLocales(subtype.extraValue).forEach { locales.add(it) }
+    }
     return locales
 }
 
 @Composable
 fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale) {
-    val prefs = LocalContext.current.prefs()
+    val context = LocalContext.current
+    val prefs = context.prefs()
     if (prefs.getBoolean(Settings.PREF_DONT_SHOW_MISSING_DICTIONARY_DIALOG, Defaults.PREF_DONT_SHOW_MISSING_DICTIONARY_DIALOG)) {
         onDismissRequest()
         return
@@ -52,7 +78,13 @@ fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale) {
     val dictionaryLink = stringResource(R.string.dictionary_link_text).withHtmlLink(dictUrl)
     val message = stringResource(R.string.no_dictionary_message, repositoryLink, locale.toString(), dictionaryLink)
     var annotatedString = message.htmlToAnnotated()
-    if (availableDicts.isNotEmpty())
+    // ponytail: in standard flavor, if there are known dicts we show them as downloadable rows instead of bullet links
+    val knownDicts = remember {
+        if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard") {
+            getKnownDictionariesForLocale(locale, context)
+        } else emptyList()
+    }
+    if (availableDicts.isNotEmpty() && knownDicts.isEmpty())
         annotatedString += AnnotatedString("\n") + availableDicts
 
     ConfirmationDialog(
@@ -60,7 +92,17 @@ fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale) {
         cancelButtonText = stringResource(R.string.dialog_close),
         onConfirmed = { prefs.edit { putBoolean(Settings.PREF_DONT_SHOW_MISSING_DICTIONARY_DIALOG, true) } },
         confirmButtonText = stringResource(R.string.no_dictionary_dont_show_again_button),
-        content = { Text(annotatedString) }
+        content = {
+            androidx.compose.foundation.layout.Column {
+                Text(annotatedString)
+                if (knownDicts.isNotEmpty()) {
+                    androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    knownDicts.forEach { (desc, link) ->
+                        DownloadableDictionaryRow(locale = locale, desc = desc, link = link, onRefresh = {})
+                    }
+                }
+            }
+        }
     )
 }
 
@@ -124,3 +166,82 @@ fun cleanUnusedMainDicts(context: Context) {
 
 private fun hasAnythingOtherThanExtractedMainDictionary(dir: File) =
     dir.listFiles()?.any { it.name != DictionaryInfoUtils.MAIN_DICT_FILE_NAME } != false
+
+// ponytail: Dynamic dictionary downloader using HTTP URL connection.
+fun downloadDictionary(context: Context, locale: Locale, type: String, linkUrl: String, onComplete: (Boolean) -> Unit) {
+    val cacheDir = DictionaryInfoUtils.getCacheDirectoryForLocale(locale, context) ?: return onComplete(false)
+    val targetFile = File(cacheDir, "${type}.dict")
+    CoroutineScope(Dispatchers.IO).launch {
+        var success = false
+        try {
+            java.net.URL(linkUrl).openStream().use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            success = true
+        } catch (e: Exception) {
+            Log.e("DictionaryUtils", "Failed to download dictionary", e)
+        }
+        withContext(Dispatchers.Main) {
+            onComplete(success)
+        }
+    }
+}
+
+@Composable
+fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefresh: () -> Unit) {
+    val ctx = LocalContext.current
+    val type = remember(link) { link.substringAfterLast("/").substringBefore("_") }
+    val cacheDir = remember(locale) { DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx) }
+    val file = remember(cacheDir, type) { cacheDir?.let { File(it, "$type.dict") } }
+    var downloading by remember { mutableStateOf(false) }
+    var exists by remember(file) { mutableStateOf(file?.exists() == true) }
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Text(desc, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        if (exists) {
+            var showDeleteDialog by remember { mutableStateOf(false) }
+            androidx.compose.material3.TextButton(onClick = { showDeleteDialog = true }) {
+                Text(stringResource(R.string.remove), color = MaterialTheme.colorScheme.error)
+            }
+            if (showDeleteDialog) {
+                ConfirmationDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    confirmButtonText = stringResource(R.string.remove),
+                    onConfirmed = { 
+                        file?.delete()
+                        exists = false
+                        onRefresh()
+                    },
+                    content = { Text(stringResource(R.string.remove_dictionary_message, type)) }
+                )
+            }
+        } else if (downloading) {
+            Text(
+                stringResource(R.string.downloading),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        } else {
+            androidx.compose.material3.TextButton(onClick = {
+                downloading = true
+                downloadDictionary(ctx, locale, type, link) { success ->
+                    downloading = false
+                    if (success) {
+                        exists = true
+                        onRefresh()
+                    } else {
+                        android.widget.Toast.makeText(ctx, ctx.getString(R.string.download_failed), android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }) {
+                Text(stringResource(R.string.download))
+            }
+        }
+    }
+}
