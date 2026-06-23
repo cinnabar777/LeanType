@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import android.os.IBinder
 import helium314.keyboard.compat.locale
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.common.Links
@@ -28,6 +29,7 @@ import helium314.keyboard.latin.common.LocaleUtils
 import helium314.keyboard.latin.common.LocaleUtils.constructLocale
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.settings.Theme
 import helium314.keyboard.settings.dialogs.ConfirmationDialog
 import java.io.File
 import java.util.Locale
@@ -244,4 +246,50 @@ fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefr
             }
         }
     }
+}
+
+// ponytail: check if the main dictionary is missing/not loaded for a given locale
+fun isMainDictionaryMissing(context: Context, locale: Locale): Boolean {
+    // 1. check if there's any dictionary in assets matching the locale
+    val assetsList = DictionaryInfoUtils.getAssetsDictionaryList(context)
+    if (assetsList != null) {
+        val best = LocaleUtils.getBestMatch(locale, assetsList.toList()) {
+            DictionaryInfoUtils.extractLocaleFromAssetsDictionaryFile(it)
+        }
+        if (best != null) return false
+    }
+    // 2. check if cache directory has a main.dict file
+    val cacheDir = DictionaryInfoUtils.getCacheDirectoryForLocale(locale, context)?.let { File(it) }
+    if (cacheDir?.exists() == true && cacheDir.isDirectory) {
+        val hasMain = cacheDir.listFiles()?.any { it.name == "main.dict" } == true
+        if (hasMain) return false
+    }
+    // 3. check if there is a known downloadable main dictionary for this locale
+    val known = getKnownDictionariesForLocale(locale, context)
+    return known.any { (_, link) -> link.substringAfterLast("/").substringBefore("_") == "main" }
+}
+
+// ponytail: bridge compose dialog to legacy view
+fun showMissingDictionaryComposeDialog(context: Context, locale: Locale, windowToken: IBinder, onDismiss: () -> Unit) {
+    val dialog = android.app.Dialog(getPlatformDialogThemeContext(context))
+    val composeView = androidx.compose.ui.platform.ComposeView(context).apply {
+        setContent {
+            Theme {
+                MissingDictionaryDialog(
+                    onDismissRequest = {
+                        dialog.dismiss()
+                        onDismiss()
+                    },
+                    locale = locale
+                )
+            }
+        }
+    }
+    dialog.setContentView(composeView)
+    val window = dialog.window
+    val layoutParams = window?.attributes
+    layoutParams?.token = windowToken
+    layoutParams?.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
+    window?.attributes = layoutParams
+    dialog.show()
 }

@@ -62,6 +62,10 @@ import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.removeFirst
 import helium314.keyboard.latin.utils.removePinnedKey
 import helium314.keyboard.latin.utils.setToolbarButtonsActivatedStateOnPrefChange
+import helium314.keyboard.latin.utils.isMainDictionaryMissing
+import helium314.keyboard.latin.utils.showMissingDictionaryComposeDialog
+import helium314.keyboard.latin.utils.SubtypeSettings
+import helium314.keyboard.latin.utils.locale
 import helium314.keyboard.settings.SettingsWithoutKey
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
@@ -120,6 +124,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private val pinnedKeys: ViewGroup = findViewById(R.id.pinned_keys)
     private val suggestionsStrip: ViewGroup = findViewById(R.id.suggestions_strip)
     private val toolbarExpandKey = findViewById<ImageButton>(R.id.suggestions_strip_toolbar_key)
+    private var dictDownloadButton: ImageButton? = null
     private val toolbarArrowIcon = KeyboardIconsSet.instance.getNewDrawable(KeyboardIconsSet.NAME_TOOLBAR_KEY, context)
     private val defaultToolbarBackground: Drawable = toolbarExpandKey.background
     private val enabledToolKeyBackground = GradientDrawable()
@@ -864,6 +869,48 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             // This prevents conflicts with auto-hide pinned keys logic
             layoutHelper.setSuggestionsCountInStrip(3)
         }
+        
+        // ponytail: show/hide dictionary download button if dictionary is missing
+        if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard") {
+            val currentLocale = SubtypeSettings.getSelectedSubtype(context.prefs()).locale()
+            if (isMainDictionaryMissing(context, currentLocale) && !hideToolbarKeys) {
+                if (dictDownloadButton == null) {
+                    dictDownloadButton = ImageButton(context, null, R.attr.suggestionWordStyle).apply {
+                        scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                        val padding = 6.dpToPx(resources)
+                        setPadding(padding, padding, padding, padding)
+                        setImageResource(R.drawable.ic_dictionary)
+                        contentDescription = context.getString(R.string.download)
+                        setOnClickListener {
+                            val token = this.windowToken
+                            if (token != null) {
+                                showMissingDictionaryComposeDialog(context, currentLocale, token) {
+                                    updateKeys()
+                                }
+                            }
+                        }
+                    }
+                    val toolbarHeight = min(toolbarExpandKey.layoutParams.height, resources.getDimension(R.dimen.config_suggestions_strip_height).toInt())
+                    dictDownloadButton?.layoutParams = LinearLayout.LayoutParams(toolbarHeight, toolbarHeight).apply {
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                    }
+                    
+                    val wrapper = findViewById<LinearLayout>(R.id.suggestions_strip_wrapper)
+                    val expandIndex = wrapper.indexOfChild(toolbarExpandKey)
+                    wrapper.addView(dictDownloadButton, expandIndex + 1)
+                }
+                val colors = Settings.getValues().mColors
+                colors.setColor(dictDownloadButton!!, ColorType.TOOL_BAR_KEY)
+                dictDownloadButton?.setBackgroundResource(R.drawable.toolbar_key_background)
+                colors.setColor(dictDownloadButton!!.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
+                dictDownloadButton?.isVisible = true
+            } else {
+                dictDownloadButton?.isVisible = false
+            }
+        } else {
+            dictDownloadButton?.isVisible = false
+        }
+
         isExternalSuggestionVisible = false
     }
 
