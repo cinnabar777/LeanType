@@ -273,12 +273,12 @@ val toolbarKeyStrings = entries.associateWithTo(EnumMap(ToolbarKey::class.java))
 
 // ponytail: Split excluded keys into flavor-specific exclusions and main-toolbar-only exclusions to allow clipboard toolbar to render clipboard search and close history.
 private val flavorExcludedKeys by lazy {
-    val customAiKeys = if (BuildConfig.FLAVOR != "standard" && BuildConfig.FLAVOR != "offline")
+    val customAiKeys = if (BuildConfig.FLAVOR != "standard" && BuildConfig.FLAVOR != "standardfull" && BuildConfig.FLAVOR != "offline")
         ToolbarKey.entries.filter { it.name.startsWith("CUSTOM_AI_") }
     else emptyList()
     val otherKeys = if (BuildConfig.FLAVOR == "offlinelite")
         listOf(PROOFREAD, TRANSLATE, CLIPBOARD_SEARCH, HANDWRITING)
-    else if (BuildConfig.FLAVOR == "offline")
+    else if (BuildConfig.FLAVOR == "offline" || BuildConfig.FLAVOR == "standard")
         listOf(HANDWRITING)
     else
         emptyList()

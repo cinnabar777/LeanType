@@ -862,7 +862,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         }
         
         // ponytail: show/hide dictionary download button if dictionary is missing
-        if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard") {
+        if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard" || helium314.keyboard.latin.BuildConfig.FLAVOR == "standardfull") {
             val currentLocale = SubtypeSettings.getSelectedSubtype(context.prefs()).locale()
             if (isMainDictionaryMissing(context, currentLocale) && !hideToolbarKeys) {
                 if (dictDownloadButton == null) {
@@ -1021,11 +1021,25 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                      val suggestionView = TextView(context, null, R.attr.suggestionWordStyle)
                      suggestionView.text = word
                      suggestionView.gravity = android.view.Gravity.CENTER
-                     suggestionView.alpha = 0.4f // More transparent to indicate they're placeholders
+                     suggestionView.alpha = 0.6f // Muted to show they are fallback, but clickable
                      if (customTypeface != null)
                          suggestionView.typeface = customTypeface
                      colors.setBackground(suggestionView, ColorType.STRIP_BACKGROUND)
                      suggestionView.setTextColor(colors.get(ColorType.KEY_TEXT))
+
+                     // ponytail: make fallback active and clickable
+                     suggestionView.setOnClickListener {
+                         val wordInfo = SuggestedWordInfo(
+                             word,
+                             "",
+                             SuggestedWordInfo.MAX_SCORE,
+                             SuggestedWordInfo.KIND_TYPED,
+                             Dictionary.DICTIONARY_USER_TYPED,
+                             SuggestedWordInfo.NOT_AN_INDEX,
+                             SuggestedWordInfo.NOT_A_CONFIDENCE
+                         )
+                         listener.pickSuggestionManually(wordInfo)
+                     }
                      
                      val params = LinearLayout.LayoutParams(
                          0,

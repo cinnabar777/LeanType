@@ -1,0 +1,4 @@
+- Split standard build into FOSS-compliant "standard" (no ML Kit, F-Droid ready) and "standardfull" (includes ML Kit/Handwriting)
+- Add secure CI/CD release build signing workflow for reproducible builds
+- Re-add armeabi-v7a support to ABI filters
+- Fix suggestion word long-press to target entire word for deletion

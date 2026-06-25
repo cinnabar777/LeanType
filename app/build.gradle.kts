@@ -22,9 +22,9 @@ android {
         applicationId = "com.leanbitlab.leantype"
         minSdk = 21
         targetSdk = 35
-        // ponytail: bump version to 3.8.8
-        versionCode = 3880
-        versionName = "3.8.8"
+        // ponytail: bump version to 3.8.9
+        versionCode = 3890
+        versionName = "3.8.9"
 
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         
@@ -38,6 +38,10 @@ android {
     flavorDimensions += "privacy"
     productFlavors {
         create("standard") {
+            dimension = "privacy"
+            minSdk = 23
+        }
+        create("standardfull") {
             dimension = "privacy"
             minSdk = 23
         }
@@ -105,6 +109,7 @@ android {
             val flavor = productFlavors.firstOrNull()?.name ?: ""
             val number = when(flavor) {
                 "standard" -> "1"
+                "standardfull" -> "1"
                 "offline" -> "2"
                 "offlinelite" -> "3"
                 else -> ""
@@ -127,7 +132,7 @@ android {
                 variant.proguardFiles.add(project.layout.buildDirectory.file(getDefaultProguardFile("proguard-android.txt").absolutePath))
                 variant.proguardFiles.add(project.layout.buildDirectory.file(project.buildFile.parent + "/proguard-rules.pro"))
             }
-            if (variant.flavorName == "standard") {
+            if (variant.flavorName == "standard" || variant.flavorName == "standardfull") {
                 // ponytail: dynamically find all dict files to ignore in standard flavor except main_en-US.dict
                 val dictsDir = project.file("src/main/assets/dicts")
                 if (dictsDir.exists() && dictsDir.isDirectory) {
@@ -210,7 +215,11 @@ android {
         disable += "ExtraTranslation"
     }
 
-
+    sourceSets {
+        getByName("standardfull") {
+            java.srcDirs("src/standard/java")
+        }
+    }
 }
 
 dependencies {
@@ -239,6 +248,8 @@ dependencies {
     // gemini ai proofreading
     "standardImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
     "standardImplementation"("androidx.security:security-crypto:1.1.0-alpha06") // for encrypted API key storage
+    "standardfullImplementation"("com.google.ai.client.generativeai:generativeai:0.9.0")
+    "standardfullImplementation"("androidx.security:security-crypto:1.1.0-alpha06")
 
     // local llm proofreading (offline)
     "offlineImplementation"("io.github.ljcamargo:llamacpp-kotlin:0.4.0")
@@ -254,7 +265,7 @@ dependencies {
     // ML Kit Digital Ink Recognition — required by the handwriting plugin.
     // ML Kit's internal asset manager and native library loader use the host app context,
     // so the host app must compile and include the client library resources/libraries.
-    "standardImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0")
+    "standardfullImplementation"("com.google.mlkit:digital-ink-recognition:19.0.0")
 
     // test
     testImplementation(kotlin("test"))

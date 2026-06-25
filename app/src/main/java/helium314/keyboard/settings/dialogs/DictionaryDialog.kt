@@ -129,7 +129,7 @@ fun DictionaryDialog(
                     addonDicts.forEach { DictionaryDetails(it) { refreshTrigger++ } }
                 }
                 val knownDicts = remember {
-                    if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard") {
+                    if (helium314.keyboard.latin.BuildConfig.FLAVOR == "standard" || helium314.keyboard.latin.BuildConfig.FLAVOR == "standardfull") {
                         helium314.keyboard.latin.utils.getKnownDictionariesForLocale(locale, ctx)
                     } else emptyList()
                 }

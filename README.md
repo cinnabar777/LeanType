@@ -144,6 +144,12 @@ For issues specific to LeanType features, please open an issue in this repositor
 
 For issues with core HeliBoard functionality, please report to the [original HeliBoard repository](https://github.com/Helium314/HeliBoard/issues).
 
+## Community Themes
+
+Discover and share community-made themes: [🎨 Browse Themes](https://github.com/topics/leantype-theme)
+
+> Theme creators: tag your repo with the `leantype-theme` topic to appear here.
+
 ## License
 
 LeanType (as a fork of HeliBoard/OpenBoard) is licensed under **GNU General Public License v3.0**.
