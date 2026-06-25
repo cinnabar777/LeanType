@@ -38,8 +38,14 @@ jobs:
       - name: Build Release APKs
         run: ./gradlew assembleStandardRelease assembleStandardfullRelease assembleOfflineRelease assembleOfflineliteRelease
 
-      - name: Upload APKs
+      - name: Generate Release Notes
+        # ponytail: generate release notes from changelog during build
+        run: python3 docs/scripts/generate_release_notes.py
+
+      - name: Upload APKs and Release Notes
         uses: actions/upload-artifact@v4
         with:
           name: LeanType-Release-APKs
-          path: app/build/outputs/apk/**/*.apk
+          path: |
+            app/build/outputs/apk/**/*.apk
+            docs/releasenote/release_notes_v*.md
