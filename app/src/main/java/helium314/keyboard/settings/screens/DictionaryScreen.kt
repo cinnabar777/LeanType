@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -119,7 +120,7 @@ fun DictionaryScreen(
                                     painter = painterResource(R.drawable.ic_plus),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(end = 12.dp)
+                                    modifier = Modifier.padding(end = 12.dp).size(24.dp)
                                 )
                                 Text(
                                     stringResource(R.string.add_new_dictionary_title),
@@ -149,7 +150,7 @@ fun DictionaryScreen(
                                     painter = painterResource(R.drawable.ic_dictionary),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(end = 12.dp)
+                                    modifier = Modifier.padding(end = 12.dp).size(24.dp)
                                 )
                                 Text(
                                     stringResource(R.string.edit_personal_dictionary),
@@ -179,7 +180,7 @@ fun DictionaryScreen(
                                     painter = painterResource(R.drawable.ic_bin),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(end = 12.dp)
+                                    modifier = Modifier.padding(end = 12.dp).size(24.dp)
                                 )
                                 Text(
                                     stringResource(R.string.edit_blocked_words),
