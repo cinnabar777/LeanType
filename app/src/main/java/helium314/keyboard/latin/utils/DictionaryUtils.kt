@@ -237,7 +237,9 @@ fun downloadDictionary(context: Context, locale: Locale, type: String, linkUrl: 
 fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefresh: () -> Unit) {
     val ctx = LocalContext.current
     val type = remember(link) { link.substringAfterLast("/").substringBefore("_") }
-    val cacheDir = remember(locale) { DictionaryInfoUtils.getCacheDirectoryForLocale(locale, ctx) }
+    // ponytail: extract the specific dictionary locale from the download link to avoid directory collision
+    val dictLocale = remember(link) { link.substringAfterLast("_").substringBefore(".dict").constructLocale() }
+    val cacheDir = remember(dictLocale) { DictionaryInfoUtils.getCacheDirectoryForLocale(dictLocale, ctx) }
     val file = remember(cacheDir, type) { cacheDir?.let { File(it, "$type.dict") } }
     var downloading by remember { mutableStateOf(false) }
     var exists by remember(file) { mutableStateOf(file?.exists() == true) }
@@ -274,7 +276,7 @@ fun DownloadableDictionaryRow(locale: Locale, desc: String, link: String, onRefr
         } else {
             androidx.compose.material3.TextButton(onClick = {
                 downloading = true
-                downloadDictionary(ctx, locale, type, link) { success ->
+                downloadDictionary(ctx, dictLocale, type, link) { success ->
                     downloading = false
                     if (success) {
                         exists = true

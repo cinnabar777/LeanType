@@ -60,7 +60,10 @@ fun DictionaryDialog(
     val ctx = LocalContext.current
     var refreshTrigger by remember { mutableStateOf(0) }
     val (dictionaries, hasInternal) = remember(refreshTrigger) { getUserAndInternalDictionaries(ctx, locale) }
-    val mainDict = dictionaries.firstOrNull { it.name == Dictionary.TYPE_MAIN + "_" + DictionaryInfoUtils.USER_DICTIONARY_SUFFIX }
+    val mainDict = dictionaries.firstOrNull {
+        it.name == Dictionary.TYPE_MAIN + "_" + DictionaryInfoUtils.USER_DICTIONARY_SUFFIX
+                || it.name == DictionaryInfoUtils.MAIN_DICT_FILE_NAME
+    }
     val addonDicts = dictionaries.filterNot { it == mainDict }
     val picker = dictionaryFilePicker(locale)
     ThreeButtonAlertDialog(

@@ -214,7 +214,6 @@ fun DictionaryScreen(
     }
 }
 
-/** @return list of user dictionary files and whether an internal dictionary exists */
 fun getUserAndInternalDictionaries(context: Context, locale: Locale): Pair<List<File>, Boolean> {
     val userDicts = mutableListOf<File>()
     var hasInternalDict = false
@@ -227,13 +226,21 @@ fun getUserAndInternalDictionaries(context: Context, locale: Locale): Pair<List<
                 hasInternalDict = true
         }
     }
-    if (hasInternalDict)
-        return userDicts to true
-    val internalDicts = DictionaryInfoUtils.getAssetsDictionaryList(context) ?: return userDicts to false
-    val best = LocaleUtils.getBestMatch(locale, internalDicts.toList()) {
-        DictionaryInfoUtils.extractLocaleFromAssetsDictionaryFile(it)
+    val internalDicts = DictionaryInfoUtils.getAssetsDictionaryList(context)
+    val best = internalDicts?.let {
+        LocaleUtils.getBestMatch(locale, it.toList()) { dict ->
+            DictionaryInfoUtils.extractLocaleFromAssetsDictionaryFile(dict)
+        }
     }
-    return userDicts to (best != null)
+    val hasAsset = best != null
+    
+    // ponytail: if no built-in assets exist, main.dict in cache is a downloaded main dict.
+    if (!hasAsset && userLocaleDir?.exists() == true) {
+        val downloadedMain = File(userLocaleDir, DictionaryInfoUtils.MAIN_DICT_FILE_NAME)
+        if (downloadedMain.exists())
+            userDicts.add(downloadedMain)
+    }
+    return userDicts to (hasInternalDict || hasAsset)
 }
 
 @Preview
