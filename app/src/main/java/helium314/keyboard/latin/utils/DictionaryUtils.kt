@@ -65,12 +65,9 @@ fun getDictionaryLocales(context: Context): MutableSet<Locale> {
     DictionaryInfoUtils.getCacheDirectories(context).forEach { directory ->
         if (!hasAnythingOtherThanExtractedMainDictionary(context, directory)) return@forEach
         val locale = DictionaryInfoUtils.getWordListIdFromFileName(directory.name).constructLocale()
-        // If this is a base language (no country/variant) and a country-specific variant of this language is enabled,
-        // we skip adding the base language to avoid duplicate cards.
-        if (locale.country.isEmpty() && locale.variant.isEmpty()) {
-            val hasEnabledVariant = enabledLocales.any { it.language == locale.language && (it.country.isNotEmpty() || it.variant.isNotEmpty()) }
-            if (hasEnabledVariant) return@forEach
-        }
+        val isEnabled = enabledLocales.contains(locale)
+        val hasEnabledLanguage = enabledLocales.any { it.language == locale.language }
+        if (!isEnabled && hasEnabledLanguage) return@forEach
         locales.add(locale)
     }
     // get assets dictionaries
@@ -78,10 +75,9 @@ fun getDictionaryLocales(context: Context): MutableSet<Locale> {
     if (assetsDictionaryList != null) {
         for (dictionary in assetsDictionaryList) {
             val locale = DictionaryInfoUtils.extractLocaleFromAssetsDictionaryFile(dictionary)
-            if (locale.country.isEmpty() && locale.variant.isEmpty()) {
-                val hasEnabledVariant = enabledLocales.any { it.language == locale.language && (it.country.isNotEmpty() || it.variant.isNotEmpty()) }
-                if (hasEnabledVariant) continue
-            }
+            val isEnabled = enabledLocales.contains(locale)
+            val hasEnabledLanguage = enabledLocales.any { it.language == locale.language }
+            if (!isEnabled && hasEnabledLanguage) continue
             locales.add(locale)
         }
     }
