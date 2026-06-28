@@ -1039,6 +1039,10 @@ New dictionary:
     <string name="about_sponsor_link">Sponsor project</string>
     <!-- description for sponsor link -->
     <string name="about_sponsor_link_description">Support the development of LeanType</string>
+    <!-- ko-fi link for about screen -->
+    <string name="about_kofi_link">Support on Ko-fi</string>
+    <!-- description for ko-fi link -->
+    <string name="about_kofi_link_description">Donate to LeanType via Ko-fi</string>
     <!-- sponsor dialog -->
     <string name="sponsor_dialog_title">Sponsor this project</string>
     <string name="sponsor_dialog_message">This project is completely community-driven and relies on donations to keep development alive. If you find this keyboard useful, please consider sponsoring!</string>

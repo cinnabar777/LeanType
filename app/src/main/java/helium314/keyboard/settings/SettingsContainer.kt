@@ -86,6 +86,7 @@ object SettingsWithoutKey {
     const val HIDDEN_FEATURES = "hidden_features"
     const val GITHUB = "github"
     const val SPONSOR = "sponsor"
+    const val KO_FI = "kofi"
     const val GITHUB_WIKI = "github_wiki"
     const val SAVE_LOG = "save_log"
     const val BACKUP_RESTORE = "backup_restore"
