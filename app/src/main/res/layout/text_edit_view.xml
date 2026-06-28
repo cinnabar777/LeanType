@@ -221,13 +221,13 @@
             android:focusable="true" />
 
         <ImageView
-            android:id="@+id/btn_delete"
+            android:id="@+id/btn_space"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_margin="3dp"
             android:padding="12dp"
-            android:contentDescription="Forward delete"
+            android:contentDescription="Space"
             android:scaleType="fitCenter"
             android:clickable="true"
             android:focusable="true" />

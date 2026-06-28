@@ -6,8 +6,11 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -17,6 +20,7 @@ import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode;
 import helium314.keyboard.latin.R;
 import helium314.keyboard.latin.common.ColorType;
 import helium314.keyboard.latin.common.Colors;
+import helium314.keyboard.latin.common.Constants;
 import helium314.keyboard.latin.settings.Settings;
 
 public class TextEditView extends LinearLayout {
@@ -48,7 +52,7 @@ public class TextEditView extends LinearLayout {
     private ImageView mBtnArrowLeft;
     private ImageView mBtnArrowDown;
     private ImageView mBtnArrowRight;
-    private ImageView mBtnDelete;
+    private ImageView mBtnSpace;
 
     public TextEditView(Context context) {
         super(context);
@@ -90,80 +94,171 @@ public class TextEditView extends LinearLayout {
         mBtnArrowLeft = findViewById(R.id.btn_arrow_left);
         mBtnArrowDown = findViewById(R.id.btn_arrow_down);
         mBtnArrowRight = findViewById(R.id.btn_arrow_right);
-        mBtnDelete = findViewById(R.id.btn_delete);
+        mBtnSpace = findViewById(R.id.btn_space);
 
         setupClickListeners();
     }
 
+    // ponytail: simplified touch feedback and repeatability
+    private void setTouchHandler(View view, boolean repeatable, Runnable action, Runnable longPressAction) {
+        view.setOnTouchListener(new View.OnTouchListener() {
+            private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+            private boolean isInside = false;
+            private boolean isLongPressed = false;
+
+            private final Runnable repeatableRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    action.run();
+                    handler.postDelayed(this, 50);
+                }
+            };
+
+            private final Runnable longPressRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    isLongPressed = true;
+                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                    longPressAction.run();
+                }
+            };
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        isInside = true;
+                        isLongPressed = false;
+                        v.setScaleX(0.92f);
+                        v.setScaleY(0.92f);
+                        v.setAlpha(0.7f);
+                        if (repeatable) {
+                            action.run();
+                            handler.postDelayed(repeatableRunnable, 400);
+                        } else if (longPressAction != null) {
+                            handler.postDelayed(longPressRunnable, ViewConfiguration.getLongPressTimeout());
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        v.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(100).start();
+                        if (repeatable) {
+                            handler.removeCallbacks(repeatableRunnable);
+                        } else {
+                            handler.removeCallbacks(longPressRunnable);
+                            if (isInside && !isLongPressed) {
+                                action.run();
+                            }
+                        }
+                        return true;
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(100).start();
+                        if (repeatable) {
+                            handler.removeCallbacks(repeatableRunnable);
+                        } else {
+                            handler.removeCallbacks(longPressRunnable);
+                        }
+                        isInside = false;
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        float x = event.getX();
+                        float y = event.getY();
+                        boolean nowInside = x >= 0 && x <= v.getWidth() && y >= 0 && y <= v.getHeight();
+                        if (nowInside != isInside) {
+                            isInside = nowInside;
+                            if (!isInside) {
+                                v.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(100).start();
+                                if (repeatable) {
+                                    handler.removeCallbacks(repeatableRunnable);
+                                } else {
+                                    handler.removeCallbacks(longPressRunnable);
+                                }
+                            } else {
+                                v.setScaleX(0.92f);
+                                v.setScaleY(0.92f);
+                                v.setAlpha(0.7f);
+                                if (longPressAction != null && !isLongPressed) {
+                                    handler.postDelayed(longPressRunnable, ViewConfiguration.getLongPressTimeout() - event.getEventTime() + event.getDownTime());
+                                }
+                            }
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+    }
+
     private void setupClickListeners() {
-        mBtnSelectAll.setOnClickListener(v -> {
+        setTouchHandler(mBtnSelectAll, false, () -> {
+            if (mListener != null) mListener.onCodeInput(KeyCode.CLIPBOARD_SELECT_ALL);
+        }, null);
+
+        setTouchHandler(mBtnSelect, false, () -> {
+            mSelectionMode = !mSelectionMode;
+            applyColors(Settings.getValues().mColors);
+        }, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.CLIPBOARD_SELECT_ALL);
         });
 
-        mBtnSelect.setOnClickListener(v -> {
-            mSelectionMode = !mSelectionMode;
-            applyColors(Settings.getValues().mColors);
-        });
-
-        mBtnCut.setOnClickListener(v -> {
+        setTouchHandler(mBtnCut, false, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.CLIPBOARD_CUT);
             mSelectionMode = false;
             applyColors(Settings.getValues().mColors);
-        });
+        }, null);
 
-        mBtnCopy.setOnClickListener(v -> {
+        setTouchHandler(mBtnCopy, false, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.CLIPBOARD_COPY);
             mSelectionMode = false;
             applyColors(Settings.getValues().mColors);
-        });
+        }, null);
 
-        mBtnPaste.setOnClickListener(v -> {
+        setTouchHandler(mBtnPaste, false, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.CLIPBOARD_PASTE);
-        });
+        }, null);
 
-        mBtnClose.setOnClickListener(v -> {
+        setTouchHandler(mBtnClose, false, () -> {
             if (mListener != null) mListener.onClose();
-        });
+        }, null);
 
-        mBtnHome.setOnClickListener(v -> {
-            if (mListener != null) mListener.onCodeInput(KeyCode.MOVE_START_OF_LINE);
-        });
+        setTouchHandler(mBtnHome, false, () -> {
+            if (mListener != null) mListener.onCodeInput(KeyCode.MOVE_START_OF_PAGE);
+        }, null);
 
-        mBtnWordLeft.setOnClickListener(v -> {
+        setTouchHandler(mBtnWordLeft, false, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.WORD_LEFT);
-        });
+        }, null);
 
-        mBtnArrowUp.setOnClickListener(v -> {
+        setTouchHandler(mBtnArrowUp, true, () -> {
             if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_UP, mSelectionMode);
-        });
+        }, null);
 
-        mBtnWordRight.setOnClickListener(v -> {
+        setTouchHandler(mBtnWordRight, false, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.WORD_RIGHT);
-        });
+        }, null);
 
-        mBtnEnd.setOnClickListener(v -> {
-            if (mListener != null) mListener.onCodeInput(KeyCode.MOVE_END_OF_LINE);
-        });
+        setTouchHandler(mBtnEnd, false, () -> {
+            if (mListener != null) mListener.onCodeInput(KeyCode.MOVE_END_OF_PAGE);
+        }, null);
 
-        mBtnBackspace.setOnClickListener(v -> {
+        setTouchHandler(mBtnBackspace, true, () -> {
             if (mListener != null) mListener.onCodeInput(KeyCode.DELETE);
-        });
+        }, null);
 
-        mBtnArrowLeft.setOnClickListener(v -> {
+        setTouchHandler(mBtnArrowLeft, true, () -> {
             if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_LEFT, mSelectionMode);
-        });
+        }, null);
 
-        mBtnArrowDown.setOnClickListener(v -> {
+        setTouchHandler(mBtnArrowDown, true, () -> {
             if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_DOWN, mSelectionMode);
-        });
+        }, null);
 
-        mBtnArrowRight.setOnClickListener(v -> {
+        setTouchHandler(mBtnArrowRight, true, () -> {
             if (mListener != null) mListener.onCursorMove(KeyCode.ARROW_RIGHT, mSelectionMode);
-        });
+        }, null);
 
-        mBtnDelete.setOnClickListener(v -> {
-            if (mListener != null) mListener.onCodeInput(KeyCode.FORWARD_DELETE);
-        });
+        setTouchHandler(mBtnSpace, false, () -> {
+            if (mListener != null) mListener.onCodeInput(Constants.CODE_SPACE);
+        }, null);
     }
 
     public void setTextEditListener(TextEditListener listener) {
@@ -198,7 +293,7 @@ public class TextEditView extends LinearLayout {
         setIconKeyStyle(mBtnArrowLeft, iconsSet, "left", colors, false, keyIconColor);
         setIconKeyStyle(mBtnArrowDown, iconsSet, "down", colors, false, keyIconColor);
         setIconKeyStyle(mBtnArrowRight, iconsSet, "right", colors, false, keyIconColor);
-        setIconKeyStyle(mBtnDelete, iconsSet, "clear_clipboard", colors, false, keyIconColor);
+        setIconKeyStyle(mBtnSpace, iconsSet, "space_key_for_number_layout", colors, false, keyIconColor);
     }
 
     private void setKeyStyle(TextView textView, Colors colors, boolean isHighlighted, int textColor) {
