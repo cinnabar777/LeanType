@@ -343,8 +343,8 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             || keyboardShiftMode == WordComposer.CAPS_MODE_MANUAL_SHIFT_LOCKED
         if (shouldMakeSuggestionsOnlyFirstCharCapitalized || shouldMakeSuggestionsAllUpperCase) {
             for (i in 0 until suggestionsCount) {
-                val wordInfo = suggestionsContainer[i]
-                val wordLocale = wordInfo!!.mSourceDict.mLocale
+                val wordInfo = suggestionsContainer[i] ?: continue
+                val wordLocale = wordInfo.mSourceDict.mLocale
                 val transformedWordInfo = getTransformedSuggestedWordInfo(
                     wordInfo, wordLocale ?: locale, shouldMakeSuggestionsAllUpperCase,
                     shouldMakeSuggestionsOnlyFirstCharCapitalized, 0
@@ -353,8 +353,9 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             }
         }
         val rejected: SuggestedWordInfo?
-        if (SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION && suggestionsContainer.size > 1 && TextUtils.equals(
-                suggestionsContainer[0]!!.mWord,
+        val firstSuggestion = suggestionsContainer.firstOrNull()
+        if (SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION && suggestionsContainer.size > 1 && firstSuggestion != null && TextUtils.equals(
+                firstSuggestion.mWord,
                 wordComposer.rejectedBatchModeSuggestion
             )
         ) {

@@ -120,7 +120,7 @@ class ClipboardHistoryManager(
                                 )
                                 cachedScreenshotInfo = ScreenshotInfo(contentUri, fileName, fullPath, dateAdded)
                                 if (onComplete != null) {
-                                    Handler(Looper.getMainLooper()).post { onComplete() }
+                                    mainHandler.post { onComplete() }
                                 }
                                 return@thread
                             }
@@ -134,7 +134,7 @@ class ClipboardHistoryManager(
             }
             cachedScreenshotInfo = null
             if (onComplete != null) {
-                Handler(Looper.getMainLooper()).post { onComplete() }
+                mainHandler.post { onComplete() }
             }
         }
     }
@@ -481,7 +481,7 @@ class ClipboardHistoryManager(
                 thread {
                     val cachedPath = cacheImage(contentUri)
                     if (cachedPath != null) {
-                        Handler(Looper.getMainLooper()).post {
+                        mainHandler.post {
                             clipboardDao?.addClip(System.currentTimeMillis(), false, "[Screenshot]", cachedPath)
                         }
                     }

@@ -1195,7 +1195,7 @@ public final class EmojiPalettesView extends LinearLayout
                     }
 
                     // Success! Switch back to UI thread
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    EmojiPalettesView.this.post(() -> {
                         Toast.makeText(getContext(), "Emoji dictionary installed!", Toast.LENGTH_SHORT).show();
                         initDictionaryFacilitator();
                         mIsDownloadingEmojiDict = false;
@@ -1209,7 +1209,7 @@ public final class EmojiPalettesView extends LinearLayout
                 }
             } catch (Exception e) {
                 android.util.Log.e("EmojiSearch", "Failed to download dictionary", e);
-                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                EmojiPalettesView.this.post(() -> {
                     Toast.makeText(getContext(), "Failed to download dictionary", Toast.LENGTH_SHORT).show();
                     mIsDownloadingEmojiDict = false;
                     if (mInSearchMode) {
