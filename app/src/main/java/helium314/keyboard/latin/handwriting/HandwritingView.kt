@@ -61,7 +61,7 @@ class HandwritingView @JvmOverloads constructor(
         toolbar = findViewById(R.id.handwriting_toolbar)
 
         clearButton.setOnClickListener {
-            clearCanvasAndComposition()
+            KeyboardSwitcher.getInstance().setAlphabetKeyboard()
         }
 
         canvas.onStrokeStarted = {
@@ -87,7 +87,7 @@ class HandwritingView @JvmOverloads constructor(
         val colors = Settings.getValues().mColors
         toolbar?.let {
             colors.setBackground(it, ColorType.MAIN_BACKGROUND)
-            it.visibility = View.GONE // ponytail: hide by default to avoid duplicate toolbar/X buttons
+            it.visibility = View.VISIBLE
         }
         colors.setBackground(canvas, ColorType.MAIN_BACKGROUND)
 
@@ -175,7 +175,6 @@ class HandwritingView @JvmOverloads constructor(
                 val isReady = recognizer.isLanguageReady(language)
                 mainHandler.post {
                     if (!isReady) {
-                        toolbar?.visibility = View.VISIBLE // ponytail: show for download progress
                         languageLabel.text = "$language (Downloading...)"
                         downloadProgress.visibility = View.VISIBLE
                         downloadProgress.progress = 0
@@ -191,11 +190,9 @@ class HandwritingView @JvmOverloads constructor(
                                 mainHandler.post {
                                     downloadProgress.visibility = View.GONE
                                     if (success) {
-                                        toolbar?.visibility = View.GONE // ponytail: hide when done
                                         languageLabel.text = language
                                         android.widget.Toast.makeText(context, "Handwriting model downloaded", android.widget.Toast.LENGTH_SHORT).show()
                                     } else {
-                                        toolbar?.visibility = View.VISIBLE
                                         languageLabel.text = "$language (Download failed)"
                                         android.widget.Toast.makeText(context, "Failed to download handwriting model", android.widget.Toast.LENGTH_LONG).show()
                                     }
@@ -203,7 +200,6 @@ class HandwritingView @JvmOverloads constructor(
                             }
                         })
                     } else {
-                        toolbar?.visibility = View.GONE // ponytail: hide when already downloaded
                         languageLabel.text = language
                         downloadProgress.visibility = View.GONE
                     }
