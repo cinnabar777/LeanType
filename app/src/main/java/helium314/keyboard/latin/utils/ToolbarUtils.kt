@@ -522,6 +522,7 @@ class LongPressHintDrawable(private val base: Drawable) : Drawable() {
         val radius = bounds.height() * 0.05f
         val cx = bounds.right.toFloat() - radius * 3f
         val cy = bounds.bottom.toFloat() - radius * 3f
+        hintPaint.color = Settings.getValues().mColors.get(ColorType.KEY_HINT_TEXT)
         canvas.drawCircle(cx, cy, radius, hintPaint)
     }
 
@@ -537,7 +538,6 @@ class LongPressHintDrawable(private val base: Drawable) : Drawable() {
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
         base.colorFilter = colorFilter
-        hintPaint.colorFilter = colorFilter
     }
 
     @Deprecated("Deprecated in Java", ReplaceWith("PixelFormat.UNKNOWN", "android.graphics.PixelFormat"))
