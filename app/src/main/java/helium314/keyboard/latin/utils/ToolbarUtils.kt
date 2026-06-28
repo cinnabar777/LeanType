@@ -522,7 +522,7 @@ class LongPressHintDrawable(private val base: Drawable) : Drawable() {
         val radius = bounds.height() * 0.05f
         val cx = bounds.right.toFloat() - radius * 3f
         val cy = bounds.bottom.toFloat() - radius * 3f
-        hintPaint.color = Settings.getValues().mColors.get(ColorType.KEY_HINT_TEXT)
+        hintPaint.color = Settings.getValues().mColors.get(ColorType.CLIPBOARD_PIN)
         canvas.drawCircle(cx, cy, radius, hintPaint)
     }
 
