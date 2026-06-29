@@ -394,13 +394,24 @@ public class KeyboardView extends View {
         
         final boolean isSelected = (key.getCode() == KeyCode.SHIFT && key.isLocked())
                 || (key.getCode() == KeyCode.TOGGLE_SELECTION_MODE && KeyboardActionListenerImpl.sPersistentSelectionModeActive);
+        boolean hasFilter = false;
         if (isSelected) {
             background.setColorFilter(Color.argb(0x80, 0, 0, 0), PorterDuff.Mode.SRC_ATOP);
+            hasFilter = true;
+        } else if (key.getCode() == KeyCode.ALPHA) {
+            background.setColorFilter(Color.argb(0x1C, 0, 0, 0), PorterDuff.Mode.SRC_ATOP);
+            hasFilter = true;
+        } else if (key.getCode() == KeyCode.TOGGLE_SELECTION_MODE) {
+            background.setColorFilter(Color.argb(0x28, 0, 0, 0), PorterDuff.Mode.SRC_ATOP);
+            hasFilter = true;
+        } else if (key.getCode() == KeyCode.DELETE) {
+            background.setColorFilter(Color.argb(0x38, 0, 0, 0), PorterDuff.Mode.SRC_ATOP);
+            hasFilter = true;
         }
         
         background.draw(canvas);
         
-        if (isSelected) {
+        if (hasFilter) {
             background.clearColorFilter();
         }
         
