@@ -384,10 +384,12 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             )
             ngramContextForCurrentWord = ngramContextForCurrentWord.getNextNgramContext(WordInfo(currentWord))
 
-            // remove manually entered blacklisted words from blacklist for likely matching languages
+            // ponytail: do not automatically remove blacklisted words from blacklist on type
+            /*
             dictionaryGroups.filter { it.confidence == preferredGroup.confidence }.forEach {
                 it.removeFromBlacklist(currentWord)
             }
+            */
         }
     }
 
