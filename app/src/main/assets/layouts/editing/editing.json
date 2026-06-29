@@ -4,19 +4,19 @@
     { "code": -132, "label": "Redo", "type": "function", "width": 0.2 },
     { "code": -35, "label": "All", "type": "function", "width": 0.2 },
     { "code": -34, "label": "Word", "type": "function", "width": 0.2 },
-    { "code": -201, "label": "alpha", "type": "function", "width": 0.2 }
+    { "code": -201, "label": "alpha", "type": "action", "width": 0.2 }
   ],
   [
     { "code": -32, "label": "Cut", "type": "function", "width": 0.2 },
     { "code": -25, "label": "⤒", "width": 0.2 },
     { "code": -23, "label": "↑", "width": 0.2 },
     { "code": -26, "label": "⤓", "width": 0.2 },
-    { "code": -7, "label": "delete", "type": "function", "width": 0.2 }
+    { "code": -7, "label": "delete", "type": "action", "width": 0.2 }
   ],
   [
     { "code": -31, "label": "Copy", "type": "function", "width": 0.2 },
     { "code": -21, "label": "←", "width": 0.2 },
-    { "code": -306, "label": "Select", "width": 0.2 },
+    { "code": -306, "label": "Select", "type": "action", "width": 0.2 },
     { "code": -22, "label": "→", "width": 0.2 },
     { "code": -10015, "label": "«", "width": 0.2 }
   ],
