@@ -184,6 +184,9 @@ If you love LeanType, please consider supporting the project!
 <a href="https://github.com/sponsors/LeanBitLab">
   <img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86" width="150" alt="Sponsor on GitHub"/>
 </a>
+<a href="https://ko-fi.com/leanbitlab">
+  <img src="https://img.shields.io/badge/Support-Ko--fi-F16061?logo=ko-fi&logoColor=white" width="150" alt="Support on Ko-fi"/>
+</a>
 
 Your support keeps the code **100% Free and Open Source**.
 
