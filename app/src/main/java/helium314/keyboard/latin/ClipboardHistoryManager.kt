@@ -42,6 +42,10 @@ class ClipboardHistoryManager(
     private var clipboardDao: ClipboardDao? = null
     private var dontShowCurrentSuggestion: Boolean = false
     private var mediaStoreObserver: ContentObserver? = null
+    // ponytail: track last clip state to avoid resetting dismiss state on duplicate events
+    private var lastPrimaryClipText: String? = null
+    private var lastPrimaryClipUri: String? = null
+    private var lastPrimaryClipTimestamp: Long = 0L
 
     private data class ScreenshotInfo(
         val uri: Uri,
@@ -143,6 +147,17 @@ class ClipboardHistoryManager(
         clipboardManager = latinIME.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.addPrimaryClipChangedListener(this)
         clipboardDao = ClipboardDao.getInstance(latinIME)
+        // ponytail: initialize last clip state
+        try {
+            val clipData = clipboardManager.primaryClip
+            if (clipData != null && clipData.itemCount > 0) {
+                lastPrimaryClipText = clipData.getItemAt(0)?.coerceToText(latinIME)?.toString()
+                lastPrimaryClipUri = clipData.getItemAt(0)?.uri?.toString()
+                lastPrimaryClipTimestamp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) clipData.description.timestamp else 0L
+            }
+        } catch (e: Exception) {
+            // Ignore
+        }
         if (latinIME.mSettings.current.mClipboardHistoryEnabled)
             thread { fetchPrimaryClip() }
         thread { cleanUpImageCache() }
@@ -205,10 +220,42 @@ class ClipboardHistoryManager(
     override fun onPrimaryClipChanged() {
         // Make sure we read clipboard content only if history settings is set
         if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
-            thread { fetchPrimaryClip() }
-            dontShowCurrentSuggestion = false
-            val prefs = latinIME.prefs()
-            prefs.edit().remove("last_dismissed_clipboard_text").apply()
+            // ponytail: ignore duplicate events where clipboard contents didn't actually change
+            val clipData = try {
+                clipboardManager.primaryClip
+            } catch (e: Exception) {
+                null
+            }
+            val currentText = if (clipData != null && clipData.itemCount > 0) {
+                clipData.getItemAt(0)?.coerceToText(latinIME)?.toString()
+            } else {
+                null
+            }
+            val currentUri = if (clipData != null && clipData.itemCount > 0) {
+                clipData.getItemAt(0)?.uri?.toString()
+            } else {
+                null
+            }
+            val currentTimestamp = if (clipData != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                clipData.description.timestamp
+            } else {
+                0L
+            }
+
+            val hasChanged = currentText != lastPrimaryClipText
+                    || currentUri != lastPrimaryClipUri
+                    || (currentTimestamp != 0L && currentTimestamp != lastPrimaryClipTimestamp)
+
+            if (hasChanged) {
+                lastPrimaryClipText = currentText
+                lastPrimaryClipUri = currentUri
+                lastPrimaryClipTimestamp = currentTimestamp
+
+                thread { fetchPrimaryClip() }
+                dontShowCurrentSuggestion = false
+                val prefs = latinIME.prefs()
+                prefs.edit().remove("last_dismissed_clipboard_text").apply()
+            }
         }
     }
 
