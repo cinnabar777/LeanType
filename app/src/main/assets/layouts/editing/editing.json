@@ -4,7 +4,7 @@
     { "code": -132, "label": "Redo", "type": "function", "width": 0.2 },
     { "code": -35, "label": "All", "type": "function", "width": 0.2 },
     { "code": -34, "label": "Word", "type": "function", "width": 0.2 },
-    { "code": -201, "label": "alpha", "type": "function", "width": 0.2 }
+    { "code": -201, "label": "✕", "type": "function", "width": 0.2 }
   ],
   [
     { "code": -32, "label": "Cut", "type": "function", "width": 0.2 },

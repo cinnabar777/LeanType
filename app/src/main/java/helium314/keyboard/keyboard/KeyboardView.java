@@ -80,6 +80,7 @@ public class KeyboardView extends View {
     private final KeyDrawParams mKeyDrawParams = new KeyDrawParams();
 
     // Drawing
+    private final java.util.Map<Key, Integer> mKeyCustomBgColors = new java.util.HashMap<>();
     /** True if all keys should be drawn */
     private boolean mInvalidateAllKeys;
     /** The keys that should be drawn */
@@ -188,6 +189,7 @@ public class KeyboardView extends View {
      * @param keyboard the keyboard to display in this view
      */
     public void setKeyboard(@NonNull final Keyboard keyboard) {
+        mKeyCustomBgColors.clear();
         if (keyboard instanceof MoreSuggestions) {
             mColors.setBackground(this, ColorType.MORE_SUGGESTIONS_BACKGROUND);
         } else if (keyboard instanceof PopupKeysKeyboard) {
@@ -396,24 +398,46 @@ public class KeyboardView extends View {
                 || (key.getCode() == KeyCode.TOGGLE_SELECTION_MODE && KeyboardActionListenerImpl.sPersistentSelectionModeActive);
         
         boolean hasCustomTint = false;
-        if (key.getCode() == KeyCode.ALPHA) {
-            final int accent = mColors.get(ColorType.ACTION_KEY_BACKGROUND);
-            final int funcBg = mColors.get(ColorType.FUNCTIONAL_KEY_BACKGROUND);
-            final int blended = blend(accent, funcBg, 0.15f);
-            androidx.core.graphics.drawable.DrawableCompat.setTint(background, blended);
-            hasCustomTint = true;
-        } else if (key.getCode() == KeyCode.TOGGLE_SELECTION_MODE) {
-            final int accent = mColors.get(ColorType.ACTION_KEY_BACKGROUND);
-            final int funcBg = mColors.get(ColorType.FUNCTIONAL_KEY_BACKGROUND);
-            final int blended = blend(accent, funcBg, 0.25f);
-            androidx.core.graphics.drawable.DrawableCompat.setTint(background, blended);
-            hasCustomTint = true;
-        } else if (key.getCode() == KeyCode.DELETE) {
-            final int accent = mColors.get(ColorType.ACTION_KEY_BACKGROUND);
-            final int funcBg = mColors.get(ColorType.FUNCTIONAL_KEY_BACKGROUND);
-            final int blended = blend(accent, funcBg, 0.35f);
-            androidx.core.graphics.drawable.DrawableCompat.setTint(background, blended);
-            hasCustomTint = true;
+        if (KeyboardActionListenerImpl.sPersistentTextEditModeActive) {
+            int customColor = 0;
+            switch (key.getCode()) {
+                case -131: // Undo
+                case -132: // Redo
+                case -7:   // delete
+                    customColor = 0xFFC2A98F;
+                    break;
+                case -35:  // All
+                case -34:  // Word
+                case -306: // Select
+                case -32:  // Cut
+                case -31:  // Copy
+                case -33:  // Paste
+                    customColor = 0xFF9BB0C1;
+                    break;
+                case -201: // alpha (✕)
+                    customColor = 0xFFBFA29E;
+                    break;
+                case -23:  // Up
+                case -24:  // Down
+                case -21:  // Left
+                case -22:  // Right
+                case 32:   // space
+                    customColor = 0xFF3D3D3D;
+                    break;
+                case -25:  // Doc Start
+                case -26:  // Doc End
+                case -27:  // Line Start
+                case -28:  // Line End
+                case -10015: // Word Left
+                case -10016: // Word Right
+                    customColor = 0xFFA3B7A8;
+                    break;
+            }
+            if (customColor != 0) {
+                androidx.core.graphics.drawable.DrawableCompat.setTint(background, customColor);
+                mKeyCustomBgColors.put(key, customColor);
+                hasCustomTint = true;
+            }
         }
         
         if (isSelected) {
@@ -426,7 +450,10 @@ public class KeyboardView extends View {
             background.clearColorFilter();
         }
         if (hasCustomTint) {
-            mColors.setColor(background, ColorType.FUNCTIONAL_KEY_BACKGROUND);
+            final ColorType originalType = key.getBackgroundType() == Key.BACKGROUND_TYPE_FUNCTIONAL 
+                ? ColorType.FUNCTIONAL_KEY_BACKGROUND 
+                : ColorType.KEY_BACKGROUND;
+            mColors.setColor(background, originalType);
         }
         
         canvas.translate(-bgX, -bgY);
@@ -500,7 +527,9 @@ public class KeyboardView extends View {
             }
 
             if (key.isEnabled()) {
-                if (StringUtilsKt.isEmoji(label))
+                if (mKeyCustomBgColors.containsKey(key)) {
+                    paint.setColor(getContrastingColor(mKeyCustomBgColors.get(key)));
+                } else if (StringUtilsKt.isEmoji(label))
                     paint.setColor(key.selectTextColor(params) | 0xFF000000); // ignore alpha for emojis (though
                                                                               // actually color isn't applied anyway and
                                                                               // we could just set white)
@@ -745,7 +774,9 @@ public class KeyboardView extends View {
     }
 
     private void setKeyIconColor(Key key, Drawable icon, Keyboard keyboard) {
-        if (key.hasActionKeyBackground()) {
+        if (mKeyCustomBgColors.containsKey(key)) {
+            icon.setColorFilter(getContrastingColor(mKeyCustomBgColors.get(key)), android.graphics.PorterDuff.Mode.SRC_IN);
+        } else if (key.hasActionKeyBackground()) {
             mColors.setColor(icon, ColorType.ACTION_KEY_ICON);
         } else if (key.isShift() && keyboard != null) {
             if (keyboard.mId.mElementId == KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED
