@@ -1,0 +1,5 @@
+- Premium 5x4 Grid Text Editing Panel with dynamic key color shading & selection modifiers
+- Clean minimal dot long-press indicators & uniform toolbar key icon padding
+- Fix duplicate clipboard events resetting dismissed suggestion strip
+- Long-press bottom row clear key to exit handwriting mode
+- Fixed dictionary toggles, list UI bugs & removed obsolete SpacedTokens

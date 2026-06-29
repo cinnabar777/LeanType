@@ -34,6 +34,6 @@
 | File | Description | Permissions |
 | :--- | :--- | :--- |
 | **`1-LeanType_3.8.9-standardfull-release.apk`** | **Recommended**. Cloud AI | Internet | 
-| **`2-LeanType_3.8.9-standard-release.apk`** | **Fdroid Build**. Standard + No Handwrite | Internet |
-| **`3-LeanType_3.8.9-offline-release.apk`** | **Privacy Focused**. No Internet. Offline AI Only. | No Internet |
-| **`4-LeanType_3.8.9-offlinelite-release.apk`** | **Minimalist**. Pure FOSS. No AI code. | No Internet |
+| **`1-LeanType_3.8.9-standard-release.apk`** | **Fdroid Build**. Standard + No Handwrite | Internet |
+| **`2-LeanType_3.8.9-offline-release.apk`** | **Privacy Focused**. No Internet. Offline AI Only. | No Internet |
+| **`3-LeanType_3.8.9-offlinelite-release.apk`** | **Minimalist**. Pure FOSS. No AI code. | No Internet |
