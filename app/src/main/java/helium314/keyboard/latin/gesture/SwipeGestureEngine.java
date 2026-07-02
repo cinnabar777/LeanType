@@ -241,8 +241,9 @@ public class SwipeGestureEngine {
         if (filtered.isEmpty()) filtered = candidates;
 
         float[][] charToPos = buildCharToPos(keyboard);
+        float inputLength = pathLength(inputVec);
 
-        // Score: negative L2 distance + log-frequency bonus + sequence penalty + prediction boost
+        // Score: negative L2 distance + log-frequency bonus + sequence penalty + prediction boost + length mismatch penalty
         int m = filtered.size();
         float[] scores = new float[m];
         for (int i = 0; i < m; i++) {
@@ -257,7 +258,12 @@ public class SwipeGestureEngine {
             boolean isPredicted = predictionSet != null && predictionSet.contains(e.word.toLowerCase(Locale.ROOT));
             float predBonus = isPredicted ? 0.15f : 0f;
 
-            scores[i] = -l2(inputVec, e.path) + freqBonus + seqPenalty + predBonus;
+            // ponytail: apply length mismatch penalty to prevent short words hijacking long paths (and vice-versa)
+            float candidateLength = pathLength(e.path);
+            float lenMismatch = Math.abs(inputLength - candidateLength);
+            float lenPenalty = -lenMismatch * 0.4f;
+
+            scores[i] = -l2(inputVec, e.path) + freqBonus + seqPenalty + predBonus + lenPenalty;
         }
 
         Integer[] idx = new Integer[m];
@@ -282,6 +288,18 @@ public class SwipeGestureEngine {
     }
 
     // ── Internals ─────────────────────────────────────────────────────────────
+
+    // ponytail: calculate total path length in normalized coordinates
+    private static float pathLength(float[] path) {
+        float len = 0;
+        int n = path.length / 2;
+        for (int i = 0; i < n - 1; i++) {
+            float dx = path[2 * (i + 1)] - path[2 * i];
+            float dy = path[2 * (i + 1) + 1] - path[2 * i + 1];
+            len += (float) Math.sqrt(dx * dx + dy * dy);
+        }
+        return len;
+    }
 
     /** Build letter → normalized (x, y) center map from the current keyboard layout. */
     static float[][] buildCharToPos(Keyboard keyboard) {
@@ -354,7 +372,18 @@ public class SwipeGestureEngine {
 
     private static float l2(float[] a, float[] b) {
         float s = 0;
-        for (int i = 0; i < a.length; i++) { float d = a[i] - b[i]; s += d*d; }
+        int n = a.length / 2;
+        for (int i = 0; i < n; i++) {
+            float dx = a[2 * i] - b[2 * i];
+            float dy = a[2 * i + 1] - b[2 * i + 1];
+            float distSq = dx * dx + dy * dy;
+            // ponytail: weight endpoints (start/end) twice as heavily since they are typed more precisely
+            if (i == 0 || i == n - 1) {
+                s += distSq * 2.0f;
+            } else {
+                s += distSq;
+            }
+        }
         return (float) Math.sqrt(s);
     }
 }
