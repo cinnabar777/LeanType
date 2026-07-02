@@ -44,6 +44,7 @@ fun GestureTypingScreen(
     // Always show library loader first when no library
     val items = buildList {
         add(R.string.settings_category_configuration)
+        add(Settings.PREF_GESTURE_METHOD)
         // Library loader is always first if allowed
         if (helium314.keyboard.latin.BuildConfig.BUILD_TYPE != "nouserlib") {
             add(SettingsWithoutKey.LOAD_GESTURE_LIB)
@@ -61,7 +62,6 @@ fun GestureTypingScreen(
                 add(Settings.PREF_GESTURE_TRAIL_FADEOUT_DURATION)
 
             add(R.string.settings_category_behavior)
-            add(Settings.PREF_GESTURE_METHOD)
             add(Settings.PREF_GESTURE_SPACE_AWARE)
             add(Settings.PREF_GESTURE_FAST_TYPING_COOLDOWN)
         }
