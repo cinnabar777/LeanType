@@ -64,7 +64,6 @@ import helium314.keyboard.latin.utils.removeFirst
 import helium314.keyboard.latin.utils.removePinnedKey
 import helium314.keyboard.latin.utils.setToolbarButtonsActivatedStateOnPrefChange
 import helium314.keyboard.latin.utils.isMainDictionaryMissing
-import helium314.keyboard.latin.utils.showMissingDictionaryComposeDialog
 import helium314.keyboard.latin.utils.SubtypeSettings
 import helium314.keyboard.latin.utils.locale
 import helium314.keyboard.settings.SettingsWithoutKey
@@ -916,12 +915,14 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                         setImageResource(R.drawable.ic_dictionary)
                         contentDescription = context.getString(R.string.download)
                         setOnClickListener {
-                            val token = this.windowToken
-                            if (token != null) {
-                                showMissingDictionaryComposeDialog(context, currentLocale, token) {
-                                    updateKeys()
-                                }
+                            val intent = android.content.Intent().apply {
+                                setClass(context, helium314.keyboard.settings.SettingsActivity2::class.java)
+                                putExtra("screen", "dictionaries")
+                                setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                        or android.content.Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                                        or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
                             }
+                            context.startActivity(intent)
                         }
                     }
                     val toolbarHeight = min(toolbarExpandKey.layoutParams.height, resources.getDimension(R.dimen.config_suggestions_strip_height).toInt())
