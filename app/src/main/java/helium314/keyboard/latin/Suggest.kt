@@ -367,6 +367,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             )
         }
         replaceSingleLetterFirstSuggestion(suggestionResults)
+        adjustToTooSuggestions(suggestionResults, pointers, keyboard)
 
         // For transforming words that don't come from a dictionary, because it's our best bet
         val locale = mDictionaryFacilitator.mainLocale
@@ -446,6 +447,41 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             false, ""), ngramContext, keyboard, settingsValuesForSuggestion, SESSION_ID_TYPING, inputStyle)
         nextWordSuggestionsCache.put(ngramContext, newResults)
         return newResults
+    }
+
+    private fun adjustToTooSuggestions(suggestionResults: SuggestionResults, pointers: InputPointers, keyboard: Keyboard) {
+        if (suggestionResults.size < 2) return
+        val hasLoop = SwipeGestureEngine.hasLoopAtEnd(pointers, keyboard)
+        if (!hasLoop) {
+            var toInfo: SuggestedWordInfo? = null
+            var tooInfo: SuggestedWordInfo? = null
+            for (info in suggestionResults) {
+                val lower = info.mWord.lowercase(Locale.ROOT)
+                if (lower == "to") {
+                    toInfo = info
+                } else if (lower == "too") {
+                    tooInfo = info
+                }
+            }
+            if (toInfo != null && tooInfo != null && tooInfo.mScore >= toInfo.mScore) {
+                suggestionResults.remove(toInfo)
+                suggestionResults.remove(tooInfo)
+                val toScore = tooInfo.mScore
+                val tooScore = if (tooInfo.mScore > toInfo.mScore) toInfo.mScore else tooInfo.mScore - 1
+                suggestionResults.add(
+                    SuggestedWordInfo(
+                        toInfo.mWord, toInfo.mPrevWordsContext, toScore,
+                        toInfo.mKindAndFlags, toInfo.mSourceDict, toInfo.mIndexOfTouchPointOfSecondWord, toInfo.mAutoCommitFirstWordConfidence
+                    )
+                )
+                suggestionResults.add(
+                    SuggestedWordInfo(
+                        tooInfo.mWord, tooInfo.mPrevWordsContext, tooScore,
+                        tooInfo.mKindAndFlags, tooInfo.mSourceDict, tooInfo.mIndexOfTouchPointOfSecondWord, tooInfo.mAutoCommitFirstWordConfidence
+                    )
+                )
+            }
+        }
     }
 
     companion object {

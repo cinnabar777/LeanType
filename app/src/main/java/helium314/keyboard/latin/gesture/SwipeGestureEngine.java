@@ -265,6 +265,7 @@ public class SwipeGestureEngine {
             scores[i] = score;
             order[i] = i;
 
+
             if (score > threshold) {
                 threshold = updateThreshold(topScores, score);
             }
@@ -418,5 +419,34 @@ public class SwipeGestureEngine {
             if (topScores[i] < min) min = topScores[i];
         }
         return min;
+    }
+
+    public static boolean hasLoopAtEnd(InputPointers pointers, Keyboard keyboard) {
+        int n = pointers.getPointerSize();
+        if (n < 6) return false;
+        int[] xs = pointers.getXCoordinates();
+        int[] ys = pointers.getYCoordinates();
+        
+        // Look at the last min(n/2, 10) points
+        int pointsToCheck = Math.min(n / 2, 10);
+        if (pointsToCheck < 4) pointsToCheck = 4;
+        int startIdx = n - pointsToCheck;
+        
+        float pathLen = 0f;
+        for (int i = startIdx; i < n - 1; i++) {
+            float dx = xs[i+1] - xs[i];
+            float dy = ys[i+1] - ys[i];
+            pathLen += (float) Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        float startEndX = xs[n - 1] - xs[startIdx];
+        float startEndY = ys[n - 1] - ys[startIdx];
+        float displacement = (float) Math.sqrt(startEndX * startEndX + startEndY * startEndY);
+        
+        float kw = keyboard.mOccupiedWidth;
+        // Make sure the loop is physically large enough to be a deliberate loop, not finger jitter
+        if (pathLen < kw * 0.02f) return false;
+        
+        return pathLen > 2.0f * displacement;
     }
 }
