@@ -1106,11 +1106,24 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         btn.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        ).apply {
+            gravity = android.view.Gravity.CENTER
+        }
         btn.setOnClickListener {
             onClick.run()
         }
-        suggestionsStrip.addView(btn)
+
+        // Wrap button in a container that properly constrains its height
+        val container = LinearLayout(context)
+        container.orientation = LinearLayout.HORIZONTAL
+        container.gravity = android.view.Gravity.CENTER
+        container.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT
+        )
+        container.addView(btn)
+
+        suggestionsStrip.addView(container)
         suggestionsStrip.isVisible = true
     }
 
