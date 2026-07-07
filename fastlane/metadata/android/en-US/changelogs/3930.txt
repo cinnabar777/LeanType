@@ -1,4 +1,5 @@
-- Query and suggest personal dictionary and user history words as next-word predictions before typing starts.
-- Add same-language variant dictionary fallbacks (e.g., en_IN fallback to downloaded en_US/en_GB main dictionaries).
-- Add settings toggle to show/hide the dictionary download button in the toolbar.
-- Clean up redundant direct download links on dictionary setup page.
+- Query and suggest personal dictionary words as next-word predictions before typing.
+- Same-language variant dictionary fallbacks (e.g., en_IN fallbacks to en_US/en_GB main).
+- Optimizations and fly-over accuracy improvements in pure-Java gesture engine.
+- Toggle to show/hide download dict button in toolbar.
+- Clean up redundant links on download page.

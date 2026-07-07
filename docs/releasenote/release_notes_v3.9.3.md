@@ -7,6 +7,10 @@
 *   **Next-Word Predictions Fallback**: Personal dictionary and user history words are now automatically queried and suggested as next-word predictions before you start typing, resolving empty suggestion slots.
 *   **Same-Language Variant Fallback**: Added layout fallback dictionary loading (e.g., English India `en_IN` can now automatically fallback to use downloaded `en_US` or `en_GB` main dictionaries if installed).
 
+### 👆 Gesture & Swipe Engine (Pure-Java)
+*   **Gesture Match Optimization**: Precomputed string caches and log-frequency calculations, removing GC allocation pressure and speeding up matching loops.
+*   **Fly-over Segment Matching**: Implemented segment-distance checks to accurately match keys crossed during fast, straight gestures.
+
 ### 🛠️ Toolbar & Layout Settings
 *   **Toolbar Download Button Toggle**: Added a new settings toggle to show/hide the dictionary download shortcut button directly in the toolbar.
 *   **Dictionary Dialog Polish**: Cleaned up the dictionary download prompt by removing redundant raw download links.
