@@ -7,6 +7,7 @@ package helium314.keyboard.latin.dictionary
 
 import android.content.Context
 import helium314.keyboard.latin.common.LocaleUtils
+import helium314.keyboard.latin.common.LocaleUtils.constructLocale
 import helium314.keyboard.latin.utils.DictionaryInfoUtils
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.Log
@@ -95,8 +96,9 @@ object DictionaryFactory {
             return null
         }
         val dictType = header.mIdString.split(":").first()
+        val dictLocale = header.mLocaleString.constructLocale()
         val readOnlyBinaryDictionary = ReadOnlyBinaryDictionary(
-            file.absolutePath, 0, file.length(), false, locale, dictType
+            file.absolutePath, 0, file.length(), false, dictLocale, dictType
         )
 
         if (readOnlyBinaryDictionary.isValidDictionary) {
