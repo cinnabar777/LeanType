@@ -370,6 +370,9 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     fun setSuggestions(suggestions: SuggestedWords, isRtlLanguage: Boolean) {
+        if (isShowingEmojiSuggestions && !helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes) {
+            isShowingEmojiSuggestions = false
+        }
         if (isShowingEmojiSuggestions) return
         if (isExternalSuggestionVisible && (suggestions.isEmpty || suggestions.isPunctuationSuggestions)) {
             // Keep external suggestion (clipboard/screenshot) if new suggestions are empty or just punctuation
@@ -392,6 +395,9 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     }
 
     fun setExternalSuggestionView(view: View?, addCloseButton: Boolean) {
+        if (isShowingEmojiSuggestions && !helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().isShowingEmojiPalettes) {
+            isShowingEmojiSuggestions = false
+        }
         if (isShowingEmojiSuggestions) return
         clear()
         if (view == null) {
