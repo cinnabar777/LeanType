@@ -70,10 +70,19 @@ object DictionaryFactory {
         val header = DictionaryInfoUtils.getDictionaryFileHeaderOrNull(file)
         if (header != null) {
             val prefs = context.prefs()
-            val mainPrefKey = "pref_dict_enabled_main:${header.mIdString.substringAfter(":")}"
-            if (!prefs.getBoolean(mainPrefKey, true) || !prefs.getBoolean("pref_dict_enabled_${header.mIdString}", true)) {
-                Log.i("DictionaryFactory", "skipping disabled dictionary ${header.mIdString}")
-                return
+            val dictType = header.mIdString.split(":").first()
+            if (dictType == Dictionary.TYPE_MAIN) {
+                val localeTag = locale.toLanguageTag().lowercase().replace("-", "_")
+                val mainPrefKey = "pref_dict_enabled_main:$localeTag"
+                if (!prefs.getBoolean(mainPrefKey, true)) {
+                    Log.i("DictionaryFactory", "skipping disabled main dictionary for locale $locale")
+                    return
+                }
+            } else {
+                if (!prefs.getBoolean("pref_dict_enabled_${header.mIdString}", true)) {
+                    Log.i("DictionaryFactory", "skipping disabled addon dictionary ${header.mIdString}")
+                    return
+                }
             }
         }
         val dictionary = getDictionary(file, locale) ?: return
