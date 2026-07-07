@@ -504,10 +504,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             || key == Settings.PREF_AUTO_HIDE_PINNED_KEYS 
             || key == Settings.PREF_SPLIT_TOOLBAR
             || key == "pref_custom_ai_show_tags_on_toolbar"
-            || key?.startsWith("pref_custom_ai_tag_") == true) {
+            || key?.startsWith("pref_custom_ai_tag_") == true
+            || key?.startsWith("pref_dict_download_link_") == true) {
             rebuildToolbarKeys()
             // Update visibility with auto-hide logic
             setToolbarVisibility(isToolbarManuallyOpen, false)
+            updateKeys()
         }
     }
 

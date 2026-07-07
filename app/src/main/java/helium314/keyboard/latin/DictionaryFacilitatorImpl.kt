@@ -64,6 +64,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
     private var mPrefs: SharedPreferences? = null
     private var mContext: Context? = null
     private var mEnabledDictionariesState: Map<String, Boolean> = emptyMap()
+    private var mLoadedDownloadPrefs: Map<String, Any?> = emptyMap()
     private var dictionaryGroups = listOf(DictionaryGroup())
 
     @Volatile
@@ -144,7 +145,8 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         if (prefs != null) {
             val currentPrefs = prefs.all.filterKeys { it.startsWith("pref_dict_enabled_") }
                 .mapValues { it.value as? Boolean ?: true }
-            if (currentPrefs != mEnabledDictionariesState) {
+            val currentDownloadPrefs = prefs.all.filterKeys { it.startsWith("pref_dict_download_link_") }
+            if (currentPrefs != mEnabledDictionariesState || currentDownloadPrefs != mLoadedDownloadPrefs) {
                 return false
             }
         }
@@ -180,6 +182,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         mPrefs = prefs
         mEnabledDictionariesState = prefs.all.filterKeys { it.startsWith("pref_dict_enabled_") }
             .mapValues { it.value as? Boolean ?: true }
+        mLoadedDownloadPrefs = prefs.all.filterKeys { it.startsWith("pref_dict_download_link_") }
 
         // Initialize session word boost with context if not yet done
         if (sessionWordBoost == null) {
@@ -631,7 +634,16 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 if (word.length == 1 && info.mSourceDict.mDictType == Dictionary.TYPE_EMOJI && !StringUtils.mightBeEmoji(word[0].code))
                     continue
 
-                suggestions.add(info)
+                if (composedData.mTypedWord.isEmpty() && (dictType == Dictionary.TYPE_USER_HISTORY || dictType == Dictionary.TYPE_USER)) {
+                    val boostedScore = info.mScore + 1000
+                    val boostedInfo = SuggestedWordInfo(
+                        info.mWord, info.mPrevWordsContext, boostedScore, info.mKindAndFlags,
+                        info.mSourceDict, info.mIndexOfTouchPointOfSecondWord, info.mAutoCommitFirstWordConfidence
+                    )
+                    suggestions.add(boostedInfo)
+                } else {
+                    suggestions.add(info)
+                }
             }
         }
         return suggestions
