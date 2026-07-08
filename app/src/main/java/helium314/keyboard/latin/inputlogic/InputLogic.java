@@ -3666,19 +3666,11 @@ public final class InputLogic {
         
         if (bestStart != -1) {
             resetComposingState(true);
-            final int relativeStart = bestStart - cursorPositionInFull;
-            if (relativeStart >= 0) {
-                final String textInBetween = fullText.substring(cursorPositionInFull, bestStart);
-                final int placeholderLength = bestEnd - bestStart;
-                mConnection.deleteSurroundingText(0, textInBetween.length() + placeholderLength);
-                mConnection.commitText(textInBetween, 1);
-            } else {
-                final int currentSelectionEnd = mConnection.getExpectedSelectionEnd();
-                final int targetStart = currentSelectionEnd - cursorPositionInFull + bestStart;
-                final int targetEnd = currentSelectionEnd - cursorPositionInFull + bestEnd;
-                mConnection.setSelection(targetStart, targetEnd);
-                mConnection.commitText("", 1);
-            }
+            final int currentSelectionEnd = mConnection.getExpectedSelectionEnd();
+            final int targetStart = currentSelectionEnd - cursorPositionInFull + bestStart;
+            final int targetEnd = currentSelectionEnd - cursorPositionInFull + bestEnd;
+            mConnection.setSelection(targetStart, targetEnd);
+            mConnection.commitText("", 1);
             return true;
         }
         return false;
