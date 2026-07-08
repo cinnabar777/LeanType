@@ -3,6 +3,10 @@ package helium314.keyboard.settings.screens
 
 import android.content.Context
 import androidx.compose.material3.Surface
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
@@ -78,10 +82,45 @@ fun createLayoutSettings(context: Context): List<Setting> {
             val currentLayout = Settings.readDefaultLayoutName(layoutType, prefs)
             val displayName = if (LayoutUtilsCustom.isCustomLayout(currentLayout)) LayoutUtilsCustom.getDisplayName(currentLayout)
                 else currentLayout.getStringResourceOrName("layout_", ctx)
+            val isCustom = layoutType.name.startsWith("CUSTOM")
             Preference(
                 name = setting.title,
                 description = displayName,
-                onClick = { showDialog = true }
+                onClick = { showDialog = true },
+                value = if (isCustom) {
+                    {
+                        IconButton(
+                            onClick = {
+                                val index = layoutType.name.removePrefix("CUSTOM").toIntOrNull() ?: 0
+                                val count = prefs.getInt("custom_layouts_count", 0)
+                                if (index in 1..count) {
+                                    val edit = prefs.edit()
+                                    for (i in index until count) {
+                                        val nextVal = prefs.getString(Settings.PREF_LAYOUT_PREFIX + "CUSTOM${i + 1}", null)
+                                        if (nextVal != null) {
+                                            edit.putString(Settings.PREF_LAYOUT_PREFIX + "CUSTOM$i", nextVal)
+                                        } else {
+                                            edit.remove(Settings.PREF_LAYOUT_PREFIX + "CUSTOM$i")
+                                        }
+                                    }
+                                    edit.remove(Settings.PREF_LAYOUT_PREFIX + "CUSTOM$count")
+                                    edit.putInt("custom_layouts_count", count - 1)
+                                    edit.apply()
+                                    // Trigger recomposition
+                                    (ctx.getActivity() as? SettingsActivity)?.let {
+                                        it.prefChanged.value = it.prefChanged.value + 1
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_bin),
+                                contentDescription = "delete",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                } else null
             )
             if (showDialog)
                 LayoutPickerDialog(
