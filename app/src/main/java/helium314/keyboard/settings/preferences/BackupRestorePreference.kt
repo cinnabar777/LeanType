@@ -290,6 +290,7 @@ private fun restoreLauncher(
                         if (selectedCategories.contains(BackupCategory.DICTIONARY_HISTORY)) {
                             File(filesDir, "dicts").deleteRecursively()
                             File(filesDir, "blacklists").deleteRecursively()
+                            File(deviceProtectedFilesDir, "blacklists").deleteRecursively()
                             filesDir.listFiles()?.forEach {
                                 if (it.name.startsWith("UserHistoryDictionary")) it.delete()
                             }

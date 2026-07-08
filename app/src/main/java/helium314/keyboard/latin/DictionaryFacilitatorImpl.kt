@@ -39,6 +39,7 @@ import helium314.keyboard.latin.utils.SuggestionResults
 import helium314.keyboard.latin.utils.getSecondaryLocales
 import helium314.keyboard.latin.utils.locale
 import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.latin.utils.DeviceProtectedUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -941,9 +942,9 @@ private class DictionaryGroup(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(2))
 
     // words cannot be (permanently) removed from some dictionaries, so we use a blacklist for "removing" words
-    private val blacklistFile = if (context?.filesDir == null) null
+    private val blacklistFile = if (context == null) null
     else {
-        val file = File(context.filesDir.absolutePath + File.separator + "blacklists" + File.separator + locale.toLanguageTag() + ".txt")
+        val file = File(DeviceProtectedUtils.getFilesDir(context).absolutePath + File.separator + "blacklists" + File.separator + locale.toLanguageTag() + ".txt")
         if (file.isDirectory) file.delete() // this apparently was an issue in some versions
         if (file.parentFile?.exists() == true || file.parentFile?.mkdirs() == true) file
         else null

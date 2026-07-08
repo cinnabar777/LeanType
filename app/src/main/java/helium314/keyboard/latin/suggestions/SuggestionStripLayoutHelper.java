@@ -527,10 +527,11 @@ final class SuggestionStripLayoutHelper {
             wordView.setText(getStyledSuggestedWord(suggestedWords, indexInSuggestedWords));
             wordView.setTextColor(getSuggestionTextColor(suggestedWords, indexInSuggestedWords));
 
-            if (emojiTypeface != null && StringUtilsKt.isEmoji(wordView.getText()))
+            if (emojiTypeface != null && StringUtilsKt.isEmoji(wordView.getText())) {
                 wordView.setTypeface(emojiTypeface);
-            else
-                wordView.setTypeface(Typeface.DEFAULT); // todo: maybe use user-provided typeface here?
+            } else {
+                wordView.setTypeface(getTextTypeface(wordView.getText()));
+            }
             if (SuggestionStripView.DEBUG_SUGGESTIONS) {
                 mDebugInfoViews.get(positionInStrip).setText(suggestedWords.getDebugString(indexInSuggestedWords));
             }
@@ -652,6 +653,11 @@ final class SuggestionStripLayoutHelper {
     }
 
     private static Typeface getTextTypeface(@Nullable final CharSequence text) {
-        return hasStyleSpan(text, BOLD_SPAN) ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT;
+        final Typeface customTypeface = Settings.getInstance().getCustomTypeface();
+        final boolean isBold = hasStyleSpan(text, BOLD_SPAN);
+        if (customTypeface != null) {
+            return isBold ? Typeface.create(customTypeface, Typeface.BOLD) : customTypeface;
+        }
+        return isBold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT;
     }
 }
