@@ -1535,7 +1535,15 @@ public final class InputLogic {
         }
         // isComposingWord() may have changed since we stored wasComposing
         if (mWordComposer.isComposingWord()) {
-            if (settingsValues.mAutoCorrectEnabled && !isInlineEmojiSearchAction()) {
+            boolean shouldTriggerAutoCorrect = settingsValues.mAutoCorrectEnabled;
+            if (shouldTriggerAutoCorrect) {
+                if ("space".equals(settingsValues.mAutoCorrectTrigger)) {
+                    shouldTriggerAutoCorrect = Character.isWhitespace(codePoint);
+                } else if ("punctuation".equals(settingsValues.mAutoCorrectTrigger)) {
+                    shouldTriggerAutoCorrect = !Character.isWhitespace(codePoint);
+                }
+            }
+            if (shouldTriggerAutoCorrect && !isInlineEmojiSearchAction()) {
                 final String separator = shouldAvoidSendingCode ? LastComposedWord.NOT_A_SEPARATOR
                         : StringUtils.newSingleCodePointString(codePoint);
                 commitCurrentAutoCorrection(settingsValues, separator, handler);

@@ -73,6 +73,7 @@ object Defaults {
     @JvmField
     var PREF_POPUP_ON = true
     const val PREF_AUTO_CORRECTION = false
+    const val PREF_AUTO_CORRECT_TRIGGER = "both"
     const val PREF_MORE_AUTO_CORRECTION = false
     const val PREF_AUTO_CORRECT_THRESHOLD = 0.185f
     const val PREF_AUTOCORRECT_SHORTCUTS = true

@@ -147,6 +147,10 @@
     <string name="autocorrect">Auto-correction</string>
     <!-- Description for auto correction -->
     <string name="auto_correction_summary">Spacebar and punctuation automatically correct mistyped words</string>
+    <string name="auto_correction_trigger">Auto-correct on</string>
+    <string name="auto_correction_trigger_both">Spacebar and punctuation</string>
+    <string name="auto_correction_trigger_space">Spacebar only</string>
+    <string name="auto_correction_trigger_punctuation">Punctuation only</string>
     <!-- Option to enable auto correction for many fields that do not request auto correction -->
     <string name="more_autocorrect">More auto-correction</string>
     <!-- Description for more_autocorrect -->
