@@ -49,6 +49,7 @@ object Defaults {
     
     const val PREF_SPLIT_TOOLBAR = false
     const val PREF_SHOW_DOWNLOAD_BUTTON_IN_TOOLBAR = true
+    const val PREF_USE_SYSTEM_EMOJI = false
 
 
     private const val DEFAULT_SIZE_SCALE = 1.0f // 100%
