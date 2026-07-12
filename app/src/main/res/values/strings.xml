@@ -696,7 +696,7 @@
     <!-- Title of the setting for using system emoji font -->
     <string name="prefs_use_system_emoji">Use system emoji font</string>
     <!-- Summary/description of the setting for using system emoji font -->
-    <string name="prefs_use_system_emoji_summary">Use the system\'s emoji font in settings and search, instead of the default compatibility font. Changing this restarts the app.</string>
+    <string name="prefs_use_system_emoji_summary">Use system emoji font in settings and search (restarts app)</string>
     <!-- Description for English (UK) keyboard subtype
          (UK) should be an abbreviation of United Kingdom. -->
     <string name="subtype_en_GB">English (UK)</string>
