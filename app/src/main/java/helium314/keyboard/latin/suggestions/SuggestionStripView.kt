@@ -801,8 +801,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 hideTranslateLanguageSelector()
                 listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
             }
-            Settings.getValues().mColors.setColor(button.background, ColorType.TOOL_BAR_KEY)
             button.setBackgroundResource(R.drawable.toolbar_key_background)
+            val colors = Settings.getValues().mColors
+            colors.setColor(button.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
+            button.setTextColor(colors.get(ColorType.KEY_TEXT))
             languageList.addView(button)
         }
 
@@ -845,8 +847,10 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
             builder.show()
         }
-        Settings.getValues().mColors.setColor(customButton.background, ColorType.TOOL_BAR_KEY)
         customButton.setBackgroundResource(R.drawable.toolbar_key_background)
+        val colors = Settings.getValues().mColors
+        colors.setColor(customButton.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
+        customButton.setTextColor(colors.get(ColorType.KEY_TEXT))
         languageList.addView(customButton)
 
         // Setup close button
@@ -855,7 +859,6 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val closePadding = 9.dpToPx(resources)
         translateLanguageCloseButton.setPadding(closePadding, closePadding, closePadding, closePadding)
         translateLanguageCloseButton.setImageDrawable(KeyboardIconsSet.instance.getNewDrawable(ToolbarKey.CLOSE_HISTORY.name, context))
-        val colors = Settings.getValues().mColors
         colors.setColor(translateLanguageCloseButton, ColorType.TOOL_BAR_EXPAND_KEY)
         colors.setColor(translateLanguageCloseButton.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
         translateLanguageCloseButton.setOnClickListener {

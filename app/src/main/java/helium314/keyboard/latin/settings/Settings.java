@@ -309,6 +309,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             ToolbarUtilsKt.clearCustomToolbarKeyCodes();
             loadSettings(mContext, mSettingsValues.mLocale, mSettingsValues.mInputAttributes, mSettingsValues.mCurrentKeyboardScript);
             StatsUtils.onLoadSettings(mSettingsValues);
+            helium314.keyboard.latin.LatinIME.sSettingsDirty = true;
         } finally {
             mSettingsValuesLock.unlock();
         }

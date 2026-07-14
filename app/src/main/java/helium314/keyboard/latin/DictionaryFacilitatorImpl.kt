@@ -972,9 +972,9 @@ private class DictionaryGroup(
     private fun rebuildCompiledPatterns(patterns: Collection<String>) {
         compiledBlacklistPatterns = patterns.map { pattern ->
             try {
-                Regex(pattern, RegexOption.IGNORE_CASE)
+                Regex(pattern)
             } catch (e: Exception) {
-                Regex(Regex.escape(pattern), RegexOption.IGNORE_CASE)
+                Regex(Regex.escape(pattern))
             }
         }
     }
@@ -1007,7 +1007,8 @@ private class DictionaryGroup(
 
     fun isBlacklisted(word: String): Boolean {
         val patterns = compiledBlacklistPatterns
-        return patterns.any { it.matches(word) }
+        val lowercased = word.lowercase(locale)
+        return patterns.any { it.matches(lowercased) }
     }
 
     fun addToBlacklist(word: String) {

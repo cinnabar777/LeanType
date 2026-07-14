@@ -123,6 +123,10 @@ public class LatinIME extends InputMethodService implements
     private static final String SCHEME_PACKAGE = "package";
 
     final Settings mSettings;
+    public static volatile boolean sSettingsDirty = true;
+    private Locale mLastSettingsLocale;
+    private int mLastInputType;
+    private int mLastOrientation;
     public final KeyboardActionListener mKeyboardActionListener;
     private int mOriginalNavBarColor = 0;
     private int mOriginalNavBarFlags = 0;
@@ -656,6 +660,21 @@ public class LatinIME extends InputMethodService implements
     private void loadSettings() {
         final Locale locale = mRichImm.getCurrentSubtypeLocale();
         final EditorInfo editorInfo = getCurrentInputEditorInfo();
+        final int inputType = editorInfo != null ? editorInfo.inputType : 0;
+        final int orientation = getResources().getConfiguration().orientation;
+
+        if (!sSettingsDirty
+                && java.util.Objects.equals(locale, mLastSettingsLocale)
+                && inputType == mLastInputType
+                && orientation == mLastOrientation) {
+            return;
+        }
+
+        sSettingsDirty = false;
+        mLastSettingsLocale = locale;
+        mLastInputType = inputType;
+        mLastOrientation = orientation;
+
         final InputAttributes inputAttributes = new InputAttributes(
                 editorInfo, isFullscreenMode(), getPackageName());
         final String currentKeyboardScript = mKeyboardSwitcher.getCurrentKeyboardScript();
