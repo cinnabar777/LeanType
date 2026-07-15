@@ -42,6 +42,23 @@ class SubtypeTest {
         addLocaleKeyTextsToParams(latinIME, params, POPUP_KEYS_NORMAL)
     }
 
+    @Test fun testGetDictionaryLocales() {
+        val prefs = latinIME.prefs()
+        prefs.edit().putString(Settings.PREF_ENABLED_SUBTYPES, "").apply()
+        SubtypeSettings.reloadEnabledSubtypes(latinIME)
+
+        val enSubtype = SubtypeSettings.getResourceSubtypesForLocale(Locale.US).first()
+        val frSubtype = SubtypeSettings.getResourceSubtypesForLocale(Locale.FRANCE).first()
+
+        SubtypeSettings.addEnabledSubtype(prefs, enSubtype)
+        SubtypeSettings.addEnabledSubtype(prefs, frSubtype)
+        SubtypeSettings.reloadEnabledSubtypes(latinIME)
+
+        val locales = helium314.keyboard.latin.utils.getDictionaryLocales(latinIME)
+        assertTrue(locales.contains(Locale.US))
+        assertTrue(locales.contains(Locale.FRANCE))
+    }
+
     @Test fun emptyAdditionalSubtypesResultsInEmptyList() {
         // avoid issues where empty string results in additional subtype for undefined locale
         val prefs = latinIME.prefs()

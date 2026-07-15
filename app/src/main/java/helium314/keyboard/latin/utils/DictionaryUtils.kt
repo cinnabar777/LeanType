@@ -129,6 +129,8 @@ fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale, inline
     if (availableDicts.isNotEmpty() && knownDicts.isEmpty())
         annotatedString += AnnotatedString("\n") + availableDicts
 
+    var refreshTrigger by remember { mutableStateOf(0) }
+
     if (inline) {
         ConfirmationDialogContent(
             onDismissRequest = onDismissRequest,
@@ -141,7 +143,7 @@ fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale, inline
                     if (knownDicts.isNotEmpty()) {
                         androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         knownDicts.forEach { (desc, link) ->
-                            DownloadableDictionaryRow(locale = locale, desc = desc, link = link, onRefresh = {})
+                            DownloadableDictionaryRow(locale = locale, desc = desc, link = link, refreshTrigger = refreshTrigger, onRefresh = { refreshTrigger++ })
                         }
                     }
                 }
@@ -159,7 +161,7 @@ fun MissingDictionaryDialog(onDismissRequest: () -> Unit, locale: Locale, inline
                     if (knownDicts.isNotEmpty()) {
                         androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         knownDicts.forEach { (desc, link) ->
-                            DownloadableDictionaryRow(locale = locale, desc = desc, link = link, onRefresh = {})
+                            DownloadableDictionaryRow(locale = locale, desc = desc, link = link, refreshTrigger = refreshTrigger, onRefresh = { refreshTrigger++ })
                         }
                     }
                 }
