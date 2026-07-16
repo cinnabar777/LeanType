@@ -77,9 +77,30 @@ object AppUpgrade {
                 // Check if there is a download preference for this dictionary
                 val hasDownloadPref = prefs.contains("pref_dict_download_link_${type}_${locale}")
                         || prefs.contains("pref_dict_download_link_${type}_${locale.toLanguageTag()}")
+
+                var isExtractedAsset = prefs.getBoolean("pref_extracted_asset_${type}_${locale.toLanguageTag()}", false)
+                        || prefs.getBoolean("pref_extracted_asset_${type}_${locale}", false)
+
+                // For backward compatibility, check if the file size matches the current asset
+                if (!isExtractedAsset && hasAsset && assetsList != null) {
+                    val matchingAssets = assetsList.filter { it.startsWith("${type}_") }
+                    val bestAsset = LocaleUtils.getBestMatch(locale, matchingAssets) { asset ->
+                        DictionaryInfoUtils.extractLocaleFromAssetsDictionaryFile(asset)
+                    }
+                    if (bestAsset != null) {
+                        runCatching {
+                            context.assets.open(DictionaryInfoUtils.ASSETS_DICTIONARY_FOLDER + File.separator + bestAsset).use { input ->
+                                if (file.length() == input.available().toLong()) {
+                                    isExtractedAsset = true
+                                    prefs.edit().putBoolean("pref_extracted_asset_${type}_${locale.toLanguageTag()}", true).apply()
+                                }
+                            }
+                        }
+                    }
+                }
                 
-                // Only delete if it is an asset-backed dictionary and wasn't downloaded by the user
-                if (hasAsset && !hasDownloadPref) {
+                // Only delete if it is an asset-backed dictionary, was marked as extracted, and wasn't downloaded by the user
+                if (hasAsset && isExtractedAsset && !hasDownloadPref) {
                     file.delete()
                 }
             }

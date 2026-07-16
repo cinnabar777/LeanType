@@ -49,6 +49,8 @@ class AppUpgradeTest {
     fun testCheckVersionUpgradePreservesDownloadedAndDeletesAssets() {
         // Stub mock assets to simulate that 'bg' has a main dictionary asset
         doReturn(arrayOf("main_bg.dict")).`when`(mockAssets).list("dicts")
+        val mockStream = java.io.ByteArrayInputStream(ByteArray(0))
+        doReturn(mockStream).`when`(mockAssets).open("dicts/main_bg.dict")
 
         // Setup cache directories
         // Locale 'bg' exists in assets (main_bg.dict)
@@ -89,5 +91,29 @@ class AppUpgradeTest {
 
         // 5. eo/eo_user.dict ends with USER_DICTIONARY_SUFFIX -> Should NOT be deleted
         assertTrue("eo/eo_user.dict should not be deleted", eoUser.exists())
+    }
+
+    @Test
+    fun testCheckVersionUpgradePreservesManuallyImportedAssets() {
+        // Stub mock assets to simulate that 'bg' has a main dictionary asset
+        doReturn(arrayOf("main_bg.dict")).`when`(mockAssets).list("dicts")
+        // The asset has length 10
+        val mockStream = java.io.ByteArrayInputStream(ByteArray(10))
+        doReturn(mockStream).`when`(mockAssets).open("dicts/main_bg.dict")
+
+        val bgDir = File(DictionaryInfoUtils.getCacheDirectoryForLocale(java.util.Locale.forLanguageTag("bg"), context)!!)
+        bgDir.mkdirs()
+        // File has different length (20 vs 10)
+        val bgMain = File(bgDir, "main.dict").apply {
+            createNewFile()
+            writeBytes(ByteArray(20))
+        }
+
+        // Run checkVersionUpgrade
+        AppUpgrade.checkVersionUpgrade(context)
+
+        // Verify:
+        // bg/main.dict should NOT be deleted because it has a different size
+        assertTrue("bg/main.dict should not be deleted since size is different", bgMain.exists())
     }
 }
