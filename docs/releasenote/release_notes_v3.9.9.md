@@ -6,6 +6,7 @@
 ### 🛠️ Crashes & ANR Fixes
 - **Native JNI SIGABRT Fix**: Fixed a native crash in the LatinIME keyboard library (`libjni_latinime.so`) caused by thread-unsafe memory access during dictionary word iteration.
 - **Gesture Indexer ANR Fix**: Prevented keyboard freezes and Application Not Responding (ANR) errors by running the fallback Java gesture indexer asynchronously on a background thread instead of blocking the main thread.
+- **Asynchronous Dictionary Cleanup**: Moved dictionary closing and cleanup to a background coroutine to prevent the main thread from blocking on JNI write locks when switching languages.
 
 ### 📖 Dictionary Preservation on Upgrade
 - **Manual Import Preservation**: Stopped the app from deleting manually imported or replaced custom dictionaries during version upgrades.
