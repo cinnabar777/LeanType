@@ -216,11 +216,13 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
 
         listener?.onUpdateMainDictionaryAvailability(hasAtLeastOneInitializedMainDictionary())
 
-        // Clean up old dictionaries.
-        existingDictsToCleanup.forEach { (locale, dictTypes) ->
-            val dictGroupToCleanup = findDictionaryGroupWithLocale(oldDictionaryGroups, locale) ?: return@forEach
-            for (dictType in dictTypes) {
-                dictGroupToCleanup.closeDict(dictType)
+        // Clean up old dictionaries in the background to avoid blocking the main thread.
+        scope.launch {
+            existingDictsToCleanup.forEach { (locale, dictTypes) ->
+                val dictGroupToCleanup = findDictionaryGroupWithLocale(oldDictionaryGroups, locale) ?: return@forEach
+                for (dictType in dictTypes) {
+                    dictGroupToCleanup.closeDict(dictType)
+                }
             }
         }
 
