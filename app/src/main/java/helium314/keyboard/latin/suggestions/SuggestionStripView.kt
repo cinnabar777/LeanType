@@ -136,6 +136,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     // Translate language selector
     private var isTranslateLanguageSelectorVisible = false
+    private val translateLanguageContainer: View = findViewById(R.id.translate_language_container)
     private val translateLanguageSelector: ViewGroup = findViewById(R.id.translate_language_selector)
     private val translateLanguageCloseButton: ImageButton by lazy {
         findViewById(R.id.translate_language_close_button)
@@ -252,6 +253,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 1f
             )
             suggestionsStrip.layoutParams = suggestionsParams
+            translateLanguageContainer.layoutParams = suggestionsParams
         }
 
         if (Settings.getValues().mSplitToolbar) {
@@ -796,9 +798,11 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     fun showTranslateLanguageSelector() {
         // Hide other views
         suggestionsStrip.isVisible = false
-        toolbarContainer.isVisible = false
-        pinnedKeys.isVisible = false
-        toolbarExpandKey.isVisible = false
+        if (!Settings.getValues().mSplitToolbar) {
+            toolbarContainer.isVisible = false
+            pinnedKeys.isVisible = false
+            toolbarExpandKey.isVisible = false
+        }
 
         // Populate language buttons
         val languageList = findViewById<LinearLayout>(R.id.translate_language_list)
@@ -907,7 +911,6 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         languageList.addView(customButton)
 
         // Setup close button
-        translateLanguageCloseButton.isVisible = true
         translateLanguageCloseButton.setBackgroundResource(R.drawable.toolbar_key_background)
         val closePadding = 9.dpToPx(resources)
         translateLanguageCloseButton.setPadding(closePadding, closePadding, closePadding, closePadding)
@@ -919,13 +922,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         }
 
         // Show the selector
-        translateLanguageSelector.isVisible = true
+        translateLanguageContainer.isVisible = true
         isTranslateLanguageSelectorVisible = true
     }
 
     fun hideTranslateLanguageSelector() {
-        translateLanguageSelector.isVisible = false
-        translateLanguageCloseButton.isVisible = false
+        translateLanguageContainer.isVisible = false
 
         // Restore normal view
         val settingsValues = Settings.getValues()

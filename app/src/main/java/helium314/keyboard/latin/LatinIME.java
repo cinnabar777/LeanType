@@ -603,7 +603,6 @@ public class LatinIME extends InputMethodService implements
     public void onCreate() {
         updateWrappedContext();
         helium314.keyboard.latin.gesture.SwipeGestureEngine.initialize(this);
-        helium314.keyboard.latin.gesture.SwipeGestureEngineKotlin.initialize(this);
         mSettings.startListener();
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();

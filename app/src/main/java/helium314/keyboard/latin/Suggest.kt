@@ -19,7 +19,6 @@ import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORR
 import helium314.keyboard.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION
 import helium314.keyboard.latin.dictionary.Dictionary
 import helium314.keyboard.latin.gesture.SwipeGestureEngine
-import helium314.keyboard.latin.gesture.SwipeGestureEngineKotlin
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.settings.SettingsValuesForSuggestion
 import helium314.keyboard.latin.suggestions.SuggestionStripView
@@ -48,53 +47,29 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // Rebuilt only when key centres actually change (language/layout switch), not on shift-state
     // or action-button changes, and not on text-field focus changes.
     @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
-    @Volatile private var gestureIndexKotlin: SwipeGestureEngineKotlin.GestureIndex? = null
     @Volatile private var gestureIndexFingerprint: Int = 0
 
     fun buildGestureIndexAsync(keyboard: Keyboard) {
         val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
-        val method = Settings.getValues().mGestureMethod
-        if (method == "kotlin") {
-            if (gestureIndexKotlin != null && gestureIndexFingerprint == fingerprint) {
-                return
-            }
-            Thread {
-                try {
-                    val index = SwipeGestureEngineKotlin.buildIndex(mDictionaryFacilitator, keyboard)
-                    gestureIndexKotlin = index
-                    gestureIndexFingerprint = fingerprint
-                } catch (t: Throwable) {
-                    Log.e(TAG, "Failed to build Kotlin gesture index", t)
-                    gestureIndexKotlin = null
-                }
-            }.start()
-        } else {
-            if (gestureIndex != null && gestureIndexFingerprint == fingerprint) {
-                return
-            }
-            Thread {
-                try {
-                    val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
-                    gestureIndex = index
-                    gestureIndexFingerprint = fingerprint
-                } catch (t: Throwable) {
-                    Log.e(TAG, "Failed to build Java/JNI gesture index", t)
-                    gestureIndex = null
-                }
-            }.start()
+        if (gestureIndex != null && gestureIndexFingerprint == fingerprint) {
+            return
         }
+        Thread {
+            try {
+                val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
+                gestureIndex = index
+                gestureIndexFingerprint = fingerprint
+            } catch (t: Throwable) {
+                Log.e(TAG, "Failed to build Java/JNI gesture index", t)
+                gestureIndex = null
+            }
+        }.start()
     }
 
     fun getGestureIndex(): SwipeGestureEngine.GestureIndex? = gestureIndex
-    fun getGestureIndexKotlin(): SwipeGestureEngineKotlin.GestureIndex? = gestureIndexKotlin
 
     fun recordAccepted(word: String, pointers: InputPointers, keyboard: Keyboard) {
-        val method = Settings.getValues().mGestureMethod
-        if (method == "kotlin") {
-            SwipeGestureEngineKotlin.recordAccepted(word, pointers, keyboard, gestureIndexKotlin)
-        } else {
-            SwipeGestureEngine.recordAccepted(word, pointers, keyboard, gestureIndex)
-        }
+        SwipeGestureEngine.recordAccepted(word, pointers, keyboard, gestureIndex)
     }
 
     // Cached scoreLimit to avoid repeated Settings lookups in hot path
@@ -108,7 +83,6 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     fun clearNextWordSuggestionsCache() {
         nextWordSuggestionsCache.evictAll()
         gestureIndex = null
-        gestureIndexKotlin = null
         // Also reset scoreLimit cache to force refresh on next use
         synchronized(this) {
             mLastScoreLimitUpdateTime = 0
@@ -394,9 +368,15 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     ): SuggestedWords {
         val pointers = wordComposer.composedDataSnapshot.mInputPointers
         val method = settingsValuesForSuggestion.mGestureMethod
-        val useNative = method == "native" && JniUtils.sHaveNativeGestureLib
-        val suggestionResults = if (!useNative) {
+        val useFallback = "fallback" == method || !JniUtils.sHaveNativeGestureLib
+        val suggestionResults = if (useFallback) {
             val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
+            var index = gestureIndex
+            if (index == null || gestureIndexFingerprint != fingerprint) {
+                index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
+                gestureIndex = index
+                gestureIndexFingerprint = fingerprint
+            }
             val predictionSet = if (ngramContext.isValid) {
                 mDictionaryFacilitator.getSuggestionResults(
                     ComposedData(InputPointers(32), false, ""), ngramContext, keyboard,
@@ -405,23 +385,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             } else {
                 emptySet()
             }
-            if (method == "kotlin") {
-                var index = gestureIndexKotlin
-                if (index == null || gestureIndexFingerprint != fingerprint) {
-                    index = SwipeGestureEngineKotlin.buildIndex(mDictionaryFacilitator, keyboard)
-                    gestureIndexKotlin = index
-                    gestureIndexFingerprint = fingerprint
-                }
-                SwipeGestureEngineKotlin.rankByIndex(index, pointers, keyboard, SuggestedWords.MAX_SUGGESTIONS, predictionSet)
-            } else {
-                var index = gestureIndex
-                if (index == null || gestureIndexFingerprint != fingerprint) {
-                    index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
-                    gestureIndex = index
-                    gestureIndexFingerprint = fingerprint
-                }
-                SwipeGestureEngine.rankByIndex(index, pointers, keyboard, SuggestedWords.MAX_SUGGESTIONS, predictionSet)
-            }
+            SwipeGestureEngine.rankByIndex(index, pointers, keyboard, SuggestedWords.MAX_SUGGESTIONS, predictionSet)
         } else {
             mDictionaryFacilitator.getSuggestionResults(
                 wordComposer.composedDataSnapshot, ngramContext, keyboard,

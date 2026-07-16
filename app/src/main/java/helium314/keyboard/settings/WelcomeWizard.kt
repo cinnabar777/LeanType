@@ -228,19 +228,15 @@ fun WelcomeWizard(
                     val allSubtypes = remember { SubtypeSettings.getAllAvailableSubtypes() }
                     var enabledSubtypes by remember { mutableStateOf(SubtypeSettings.getEnabledSubtypes(true)) }
                     
-                    val showDebug = ctx.prefs().getBoolean(helium314.keyboard.latin.settings.DebugSettings.PREF_SHOW_DEBUG_SETTINGS, Defaults.PREF_SHOW_DEBUG_SETTINGS) || BuildConfig.DEBUG
-                    val gestureMethods = buildList {
-                        add(stringResource(R.string.gesture_method_native) to "native")
-                        add(stringResource(R.string.gesture_method_fallback) to "fallback")
-                        if (showDebug) {
-                            add(stringResource(R.string.gesture_method_kotlin) to "kotlin")
-                        }
-                    }
+                    val gestureMethods = listOf(
+                        stringResource(R.string.gesture_method_native) to "native",
+                        stringResource(R.string.gesture_method_fallback) to "fallback"
+                    )
                     var selectedMethod by remember {
                         mutableStateOf(
                             ctx.prefs().getString(
                                 Settings.PREF_GESTURE_METHOD,
-                                if (JniUtils.sHaveNativeGestureLib) "native" else "fallback"
+                                "fallback"
                             )!!
                         )
                     }
@@ -306,7 +302,7 @@ fun WelcomeWizard(
                                             SubtypeSettings.addEnabledSubtype(ctx.prefs(), subtype)
                                         }
                                     }
-                                    enabledSubtypes.forEach { subtype ->
+                                    enabledSubtypes.toList().forEach { subtype ->
                                         if (subtype !in selected && selected.isNotEmpty()) {
                                             SubtypeSettings.removeEnabledSubtype(ctx, subtype)
                                         }

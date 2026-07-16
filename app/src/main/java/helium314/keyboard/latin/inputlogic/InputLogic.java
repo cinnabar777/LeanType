@@ -789,11 +789,6 @@ public final class InputLogic {
     // Store last text before proofreading for undo functionality
     private String mTextBeforeProofread = null;
 
-    private void handleGestureDeepSearch() {
-        android.widget.Toast.makeText(mLatinIME, "Triggering gesture deep search...", android.widget.Toast.LENGTH_SHORT).show();
-        helium314.keyboard.latin.gesture.SwipeGestureEngineKotlin.deepSearch(mLatinIME);
-    }
-
     private void handleProofread() {
         Log.i(TAG, "handleProofread() called");
 
@@ -1145,9 +1140,6 @@ public final class InputLogic {
                 break;
             case KeyCode.PROOFREAD:
                 handleProofread();
-                break;
-            case KeyCode.GESTURE_DEEP_SEARCH:
-                handleGestureDeepSearch();
                 break;
             case KeyCode.TRANSLATE:
                 handleTranslate();

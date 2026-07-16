@@ -162,22 +162,14 @@ public final class ReadOnlyBinaryDictionary extends Dictionary {
 
     @Override
     public void forEachWord(java.util.function.BiConsumer<String, Integer> consumer) {
-        int token = 0;
-        int count = 0;
-        do {
-            if (!mLock.readLock().tryLock()) {
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-                continue;
+        mLock.readLock().lock();
+        try {
+            if (!mBinaryDictionary.isValidDictionary()) {
+                return;
             }
-            try {
-                if (!mBinaryDictionary.isValidDictionary()) {
-                    break;
-                }
+            int token = 0;
+            int count = 0;
+            do {
                 BinaryDictionary.GetNextWordAndFrequencyResult result =
                         mBinaryDictionary.getNextWordAndFrequency(token);
                 if (result.mWordAndFrequency == null) break;
@@ -187,23 +179,23 @@ public final class ReadOnlyBinaryDictionary extends Dictionary {
                     consumer.accept(word, freq);
                 }
                 token = result.mNextToken;
-            } finally {
-                mLock.readLock().unlock();
-            }
 
-            count++;
-            if (count % 200 == 0) {
-                Thread.yield();
-            }
-            if (count % 2000 == 0) {
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+                count++;
+                if (count % 200 == 0) {
+                    Thread.yield();
                 }
-            }
-        } while (token != 0);
+                if (count % 2000 == 0) {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            } while (token != 0);
+        } finally {
+            mLock.readLock().unlock();
+        }
     }
 
     @Override
