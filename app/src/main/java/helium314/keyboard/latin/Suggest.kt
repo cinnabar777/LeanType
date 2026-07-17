@@ -48,12 +48,14 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     // or action-button changes, and not on text-field focus changes.
     @Volatile private var gestureIndex: SwipeGestureEngine.GestureIndex? = null
     @Volatile private var gestureIndexFingerprint: Int = 0
+    @Volatile private var buildingFingerprint: Int? = null
 
     fun buildGestureIndexAsync(keyboard: Keyboard) {
         val fingerprint = SwipeGestureEngine.layoutFingerprint(keyboard)
-        if (gestureIndex != null && gestureIndexFingerprint == fingerprint) {
+        if ((gestureIndex != null && gestureIndexFingerprint == fingerprint) || buildingFingerprint == fingerprint) {
             return
         }
+        buildingFingerprint = fingerprint
         Thread {
             try {
                 val index = SwipeGestureEngine.buildIndex(mDictionaryFacilitator, keyboard)
@@ -62,6 +64,10 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
             } catch (t: Throwable) {
                 Log.e(TAG, "Failed to build Java/JNI gesture index", t)
                 gestureIndex = null
+            } finally {
+                if (buildingFingerprint == fingerprint) {
+                    buildingFingerprint = null
+                }
             }
         }.start()
     }
@@ -83,6 +89,7 @@ class Suggest(private val mDictionaryFacilitator: DictionaryFacilitator) {
     fun clearNextWordSuggestionsCache() {
         nextWordSuggestionsCache.evictAll()
         gestureIndex = null
+        buildingFingerprint = null
         // Also reset scoreLimit cache to force refresh on next use
         synchronized(this) {
             mLastScoreLimitUpdateTime = 0
