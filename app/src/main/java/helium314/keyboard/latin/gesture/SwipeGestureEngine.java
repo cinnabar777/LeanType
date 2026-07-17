@@ -26,8 +26,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SwipeGestureEngine {
+
+    private static final ExecutorService sSaveExecutor = Executors.newSingleThreadExecutor();
 
     private static final int N_PTS = 16;
     private static final float FREQ_WEIGHT = 0.05f;
@@ -122,11 +126,11 @@ public class SwipeGestureEngine {
     }
 
     private static void saveUserDataAsync() {
-        new Thread(() -> {
+        sSaveExecutor.execute(() -> {
             synchronized (SwipeGestureEngine.class) {
                 saveUserData();
             }
-        }).start();
+        });
     }
 
     private static void loadUserData() {
