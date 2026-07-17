@@ -1748,7 +1748,7 @@ public final class InputLogic {
                         Constants.EVENT_BACKSPACE);
             }
             mWordComposer.reset();
-            mConnection.commitText("", 1);
+            sendDownUpKeyEvent(KeyEvent.KEYCODE_DEL);
             StatsUtils.onBackspaceSelectedText(numCharsDeleted);
             if (inputTransaction.getSettingsValues().needsToLookupSuggestions()
                     && inputTransaction.getSettingsValues().mSpacingAndPunctuations.mCurrentLanguageHasSpaces) {
@@ -1897,7 +1897,7 @@ public final class InputLogic {
             // We should backspace one char and restart suggestion if at the end of a word.
             if (mConnection.hasSelection()) {
                 mWordComposer.reset();
-                mConnection.commitText("", 1);
+                sendDownUpKeyEvent(KeyEvent.KEYCODE_DEL);
             } else {
                 // There is no selection, just delete one character.
                 if (inputTransaction.getSettingsValues().mInputAttributes.isTypeNull()
