@@ -910,10 +910,18 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         if (mEmojiPalettesView != null) {
             mEmojiPalettesView.clearKeyboardCache();
         }
+        if (mClipboardHistoryView != null) {
+            mClipboardHistoryView.stopClipboardHistory();
+        }
+        PointerTracker.clearOldViewData();
+        KeyboardLayoutSet.onSystemLocaleChanged();
     }
 
     @SuppressLint("InflateParams")
     public View onCreateInputView(@NonNull Context displayContext, final boolean isHardwareAcceleratedDrawingEnabled) {
+        if (mCurrentInputView != null) {
+            mCurrentInputView.removeAllViews();
+        }
         if (mKeyboardView != null) {
             mKeyboardView.closing();
         }

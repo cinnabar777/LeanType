@@ -2269,13 +2269,12 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
-        switch (level) {
-            case TRIM_MEMORY_RUNNING_LOW, TRIM_MEMORY_RUNNING_CRITICAL, TRIM_MEMORY_COMPLETE -> {
-                KeyboardLayoutSet.onSystemLocaleChanged(); // clears caches, nothing else
-                mKeyboardSwitcher.trimMemory();
-            }
-            // deallocateMemory always called on hiding, and should not be called when
-            // showing
+        if (level >= TRIM_MEMORY_BACKGROUND || level == TRIM_MEMORY_UI_HIDDEN) {
+            mKeyboardSwitcher.trimMemory();
+            deallocateMemory();
+        } else if (level >= TRIM_MEMORY_RUNNING_LOW) {
+            KeyboardLayoutSet.onSystemLocaleChanged();
+            mKeyboardSwitcher.trimMemory();
         }
     }
 }

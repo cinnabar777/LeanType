@@ -24,6 +24,7 @@ SPDX-License-Identifier: Apache-2.0 AND GPL-3.0-only
     <application android:label="@string/english_ime_name"
             android:name="helium314.keyboard.latin.App"
             android:icon="@mipmap/ic_launcher"
+            android:largeHeap="true"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:allowBackup="false"
