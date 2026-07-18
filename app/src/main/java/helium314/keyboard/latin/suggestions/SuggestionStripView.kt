@@ -1012,10 +1012,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                     wrapper.addView(dictDownloadButton, expandIndex + 1)
                 }
                 val colors = Settings.getValues().mColors
-                colors.setColor(dictDownloadButton!!, ColorType.TOOL_BAR_KEY)
-                dictDownloadButton?.setBackgroundResource(R.drawable.toolbar_key_background)
-                colors.setColor(dictDownloadButton!!.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
-                dictDownloadButton?.isVisible = true
+                dictDownloadButton?.let { btn ->
+                    colors.setColor(btn, ColorType.TOOL_BAR_KEY)
+                    btn.setBackgroundResource(R.drawable.toolbar_key_background)
+                    btn.background?.let { bg -> colors.setColor(bg, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND) }
+                    btn.isVisible = true
+                }
             } else {
                 dictDownloadButton?.isVisible = false
             }

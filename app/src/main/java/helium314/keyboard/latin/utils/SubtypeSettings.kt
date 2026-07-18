@@ -226,7 +226,8 @@ object SubtypeSettings {
         }
         if (subtypes.isEmpty()) {
             // hardcoded fallback to en-US for weird cases
-            systemSubtypes.add(resourceSubtypesByLocale[Locale.US]!!.first())
+            resourceSubtypesByLocale[Locale.US]?.firstOrNull()?.let { systemSubtypes.add(it) }
+                ?: resourceSubtypesByLocale.values.firstOrNull()?.firstOrNull()?.let { systemSubtypes.add(it) }
         } else {
             systemSubtypes.addAll(subtypes)
         }
