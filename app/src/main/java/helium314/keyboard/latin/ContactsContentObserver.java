@@ -78,6 +78,10 @@ public class ContactsContentObserver implements Runnable {
             }
             return;
         }
+        if (mContext instanceof LatinIME && !((LatinIME) mContext).isInputViewShown()) {
+            mRunning.set(false);
+            return;
+        }
         if (haveContentsChanged()) {
             if (DebugFlags.DEBUG_ENABLED) {
                 Log.d(TAG, "run() : Contacts have changed. Notifying listeners.");
