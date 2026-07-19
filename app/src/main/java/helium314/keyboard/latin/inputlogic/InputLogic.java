@@ -252,6 +252,7 @@ public final class InputLogic {
         resetComposingState(true);
         mInputLogicHandler.reset();
         mSpaceState = SpaceState.NONE;
+        mConnection.onFinishInput();
     }
 
     /**

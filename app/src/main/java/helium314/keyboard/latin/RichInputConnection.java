@@ -158,6 +158,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public boolean isConnected() {
+        mIC = mParent.getCurrentInputConnection();
         return mIC != null;
     }
 
@@ -173,6 +174,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
 
     public void onStartInput() {
         mLastSlowInputConnectionTime = -SLOW_INPUTCONNECTION_PERSIST_MS;
+        mIC = mParent.getCurrentInputConnection();
+    }
+
+    public void onFinishInput() {
+        mIC = null;
     }
 
     private void checkConsistencyForDebug() {

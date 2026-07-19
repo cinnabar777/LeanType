@@ -5,6 +5,7 @@
 
 ### 🛠️ Bug Fixes & Stability Improvements
 - **PointerTracker TimerProxy Safety**: Fixed `NullPointerException` on `TimerProxy.startTypingStateTimer` by defensively defaulting static `sTimerProxy` to `TimerProxy.NULL` and guarding accesses when proxy map references are cleared during view teardowns or transitions.
+- **Dynamic InputConnection & Long Press Fix**: Fixed issue where re-opening the keyboard in Launcher or search fields dropped character input and long-press popup key selections by dynamically fetching the live system `InputConnection`.
 
 ## 📦 Downloads (Choose Your Flavor)
 
