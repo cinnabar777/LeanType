@@ -158,7 +158,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     }
 
     public boolean isConnected() {
-        mIC = mParent.getCurrentInputConnection();
         return mIC != null;
     }
 
@@ -868,10 +867,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
-        if (!Settings.getValues().mInputAttributes.mShouldShowSuggestions) {
-            commitText(text.toString(), newCursorPosition);
-            return true;
-        }
         if (mExpectedSelStart == INVALID_CURSOR_POSITION) {
             mExpectedSelStart = text.length();
         } else {
