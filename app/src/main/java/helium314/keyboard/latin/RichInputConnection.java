@@ -380,13 +380,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
         if (DebugFlags.DEBUG_ENABLED)
             Log.d(TAG, "committing " + text.length() + " characters");
         mCommittedTextBeforeComposingText.append(text);
-        // TODO: the following is exceedingly error-prone. Right now when the cursor is
-        // in the
-        // middle of the composing word mComposingText only holds the part of the
-        // composing text
-        // that is before the cursor, so this actually works, but it's terribly
-        // confusing. Fix this.
-        mExpectedSelStart += text.length() - mComposingText.length();
+        if (mExpectedSelStart == INVALID_CURSOR_POSITION) {
+            mExpectedSelStart = text.length();
+        } else {
+            mExpectedSelStart += text.length() - mComposingText.length();
+        }
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
         if (isConnected()) {
@@ -398,10 +396,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 final int spanStart = mTempObjectForCommitText.getSpanStart(span);
                 final int spanEnd = mTempObjectForCommitText.getSpanEnd(span);
                 final int spanFlags = mTempObjectForCommitText.getSpanFlags(span);
-                // We have to adjust the end of the span to include an additional character.
-                // This is to avoid splitting a unicode surrogate pair.
-                // See helium314.keyboard.latin.common.Constants.UnicodeSurrogate
-                // See https://b.corp.google.com/issues/19255233
                 if (0 < spanEnd && spanEnd < mTempObjectForCommitText.length()) {
                     final char spanEndChar = mTempObjectForCommitText.charAt(spanEnd - 1);
                     final char nextChar = mTempObjectForCommitText.charAt(spanEnd);
@@ -411,7 +405,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                     }
                 }
             }
-            mIC.commitText(mTempObjectForCommitText, newCursorPosition);
+            final CharSequence textToCommit = spans.length > 0 ? mTempObjectForCommitText : text.toString();
+            mIC.commitText(textToCommit, newCursorPosition);
         }
     }
 
@@ -873,7 +868,15 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             checkBatchEdit();
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
-        mExpectedSelStart += text.length() - mComposingText.length();
+        if (!Settings.getValues().mInputAttributes.mShouldShowSuggestions) {
+            commitText(text.toString(), newCursorPosition);
+            return true;
+        }
+        if (mExpectedSelStart == INVALID_CURSOR_POSITION) {
+            mExpectedSelStart = text.length();
+        } else {
+            mExpectedSelStart += text.length() - mComposingText.length();
+        }
         mExpectedSelEnd = mExpectedSelStart;
         mComposingText.setLength(0);
         mComposingText.append(text);
@@ -884,21 +887,6 @@ public final class RichInputConnection implements PrivateCommandPerformer {
             if (DebugFlags.DEBUG_ENABLED)
                 Log.d(TAG, "setting composing text of length " + text.length()); // don't log actual text
             mIC.setComposingText(text, newCursorPosition);
-            if (!Settings.getValues().mInputAttributes.mShouldShowSuggestions && text.length() > 0) {
-                // We have a field that disables suggestions, but still committed text is set.
-                // This might lead to weird bugs (e.g.
-                // https://github.com/Helium314/HeliBoard/issues/225), so better do
-                // a sanity check whether the wanted text has been set.
-                // Note that the check may also fail because the text field is not yet updated,
-                // so we don't want to check everything!
-                final CharSequence lastChar = mIC.getTextBeforeCursor(1, 0);
-                if (lastChar == null || lastChar.length() == 0
-                        || text.charAt(text.length() - 1) != lastChar.charAt(0)) {
-                    Log.w(TAG, "did set " + text + ", but got " + mIC.getTextBeforeCursor(text.length(), 0)
-                            + " as last character");
-                    return false;
-                }
-            }
         }
         if (DEBUG_PREVIOUS_TEXT)
             checkConsistencyForDebug();
