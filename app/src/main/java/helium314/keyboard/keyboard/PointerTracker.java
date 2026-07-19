@@ -88,7 +88,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     public static void clearOldViewData() {
         sProxyMap.clear();
         sDrawingProxy = null;
-        sTimerProxy = null;
+        sTimerProxy = TimerProxy.NULL;
         sListener = KeyboardActionListener.EMPTY_LISTENER;
     }
 
@@ -101,7 +101,8 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         sGestureStrokeRecognitionParams = (GestureStrokeRecognitionParams) thatArray[1];
         sGestureStrokeDrawingParams = (GestureStrokeDrawingParams) thatArray[2];
         sTypingTimeRecorder = (TypingTimeRecorder) thatArray[3];
-        sTimerProxy = (TimerProxy) thatArray[4];
+        final TimerProxy timerProxy = (TimerProxy) thatArray[4];
+        sTimerProxy = timerProxy != null ? timerProxy : TimerProxy.NULL;
         // noinspection unchecked
         sTrackers = (ArrayList<PointerTracker>) thatArray[5];
     }
@@ -120,7 +121,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
     public final int mPointerId;
 
     private static DrawingProxy sDrawingProxy;
-    private static TimerProxy sTimerProxy;
+    private static TimerProxy sTimerProxy = TimerProxy.NULL;
     private static KeyboardActionListener sListener = KeyboardActionListener.EMPTY_LISTENER;
 
     // The {@link KeyDetector} is set whenever the down event is processed. Also
@@ -223,7 +224,7 @@ public final class PointerTracker implements PointerTrackerQueue.Element,
         final Resources res = mainKeyboardViewAttr.getResources();
         BogusMoveEventDetector.init(res);
 
-        sTimerProxy = timerProxy;
+        sTimerProxy = timerProxy != null ? timerProxy : TimerProxy.NULL;
         sDrawingProxy = drawingProxy;
         sTrackers = new ArrayList<>();
 
