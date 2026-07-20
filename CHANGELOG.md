@@ -2,6 +2,23 @@
 
 All notable changes to LeanType will be documented in this file.
 
+## [v4.0.2] - 2026-07-20
+
+### Added
+- **Immediate Auto-Space Toggle**: Added setting to eliminate phantom space delay by committing auto-space immediately.
+- **Next-Word Suggestion Controls**: Added preference controls to enable/disable and customize next-word predictions.
+- **Gesture Library Required Toast**: Shows an explicit toast prompt to load or download the native gesture library when gesture typing is enabled and swiping is attempted without the library.
+
+### Refactored
+- **Removed Java Gesture Engine**: Completely removed the experimental Java gesture engine in favor of the native C++ gesture engine, preventing crashes and reducing codebase bloat.
+
+### Fixed
+- **Native Gesture Library Safety**: Strictly validated native gesture library compatibility in JNI loader to prevent `SIGSEGV` native crashes with incompatible libraries.
+- **IME Lifecycle & ANR Prevention**: Cancelled gesture indexing tasks and made dictionary cleanup non-blocking on `LatinIME.onDestroy()`.
+- **Background Service & Observer Leaks**: Unified background service toggles (Contacts, Apps, SMS OTP) and safely unregistered `ContentObserver`s on teardown.
+- **Android 14+ System Fixes**: Exported ringer mode broadcast receiver and supported `onBackInvokedCallback` system behavior.
+- **Personal Dictionary Fallback**: Gated personal dictionary unigram fallbacks behind `mPrioritizePersonalSuggestions` and disabled history dictionary unigram fallbacks.
+
 ## [v4.0.1] - 2026-07-19
 
 ### Fixed
