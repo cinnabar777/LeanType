@@ -639,7 +639,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
                 settingsValuesForSuggestion, sessionId, weightForLocale, weightOfLangModelVsSpatialModel
             )
             if (composedData.mTypedWord.isEmpty() && (dictionarySuggestions == null || dictionarySuggestions.isEmpty())
-                && (dictType == Dictionary.TYPE_USER || dictType == Dictionary.TYPE_USER_HISTORY)
+                && dictType == Dictionary.TYPE_USER
             ) {
                 if (!Settings.getValues().mNextWordStrictNgram) {
                     val allWords = try {
