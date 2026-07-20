@@ -477,8 +477,8 @@ fun createAdvancedSettings(context: Context) = listOfNotNull(
 
         val items = remember(selectedLanguage) {
             val zipped = languageNames.zip(languageCodes).toMutableList()
-            if (!languageCodes.contains(selectedLanguage) && selectedLanguage.isNotEmpty()) {
-                zipped.add(0, "Custom ($selectedLanguage)" to selectedLanguage)
+            if (!languageCodes.contains(selectedLanguage) && selectedLanguage.isNotEmpty() && selectedLanguage != "custom") {
+                zipped.add(0, selectedLanguage to selectedLanguage)
             }
             zipped.add("Custom..." to "custom")
             zipped

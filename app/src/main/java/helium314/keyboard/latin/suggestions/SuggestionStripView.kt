@@ -818,6 +818,13 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         dialog.show()
     }
 
+    private fun isSameLanguage(p1: Pair<String, String>, p2: Pair<String, String>): Boolean {
+        return p1.first.equals(p2.first, ignoreCase = true) ||
+               p1.second.equals(p2.second, ignoreCase = true) ||
+               p1.first.equals(p2.second, ignoreCase = true) ||
+               p1.second.equals(p1.first, ignoreCase = true)
+    }
+
     fun showTranslateLanguageSelector() {
         // Hide other views
         suggestionsStrip.isVisible = false
@@ -840,15 +847,21 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         val currentLanguageName = prefs.getString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, currentLanguageCode) ?: currentLanguageCode
         
         val history = getLanguageHistory(prefs).toMutableList()
-        if (currentLanguageCode.isNotEmpty() && history.none { it.second == currentLanguageCode }) {
-            history.add(0, currentLanguageName to currentLanguageCode)
+        if (currentLanguageCode.isNotEmpty() && currentLanguageCode != "custom") {
+            val currentPair = currentLanguageName to currentLanguageCode
+            if (history.none { isSameLanguage(it, currentPair) }) {
+                history.add(0, currentPair)
+            }
         }
 
         val list = mutableListOf<Pair<String, String>>()
-        list.addAll(history)
-        val historyCodes = history.map { it.second }.toSet()
+        for (item in history) {
+            if (list.none { isSameLanguage(it, item) }) {
+                list.add(item)
+            }
+        }
         for (item in defaultList) {
-            if (item.second !in historyCodes) {
+            if (list.none { isSameLanguage(it, item) }) {
                 list.add(item)
             }
         }
@@ -881,7 +894,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
             }
 
-            val isCustomOrHistory = history.any { it.second == languageCode }
+            val isCustomOrHistory = history.any { isSameLanguage(it, languageName to languageCode) }
             if (isCustomOrHistory) {
                 button.setOnLongClickListener {
                     val builder = android.app.AlertDialog.Builder(context)
@@ -904,53 +917,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             languageList.addView(button)
         }
 
-        // Setup Custom... button
-        val customButton = android.widget.TextView(context, null, R.attr.suggestionWordStyle).apply {
-            text = "Custom..."
-            gravity = android.view.Gravity.CENTER
-            setPadding(8.dpToPx(resources), 0, 8.dpToPx(resources), 0)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-            setSingleLine()
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            minimumWidth = 100.dpToPx(resources)
-        }
-        customButton.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.MATCH_PARENT
-        ).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
-        
-        customButton.setOnClickListener {
-            val builder = android.app.AlertDialog.Builder(context)
-            builder.setTitle("Custom Target Language")
-            val input = android.widget.EditText(context).apply {
-                setText(if (currentLanguageCode == "custom") "" else currentLanguageCode)
-                setSingleLine()
-            }
-            builder.setView(input)
-            builder.setPositiveButton("OK") { dialog, _ ->
-                val customLang = input.text.toString().trim()
-                if (customLang.isNotEmpty()) {
-                    prefs.edit().apply {
-                        putString(Settings.PREF_OFFLINE_TRANSLATE_TARGET_LANGUAGE, customLang)
-                        putString(SettingsWithoutKey.GEMINI_TARGET_LANGUAGE, customLang)
-                    }.apply()
-                    saveLanguageHistory(prefs, customLang, customLang)
-                    helium314.keyboard.latin.utils.ProofreadService(context).setTargetLanguage(customLang)
-                    hideTranslateLanguageSelector()
-                    listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
-                }
-                dialog.dismiss()
-            }
-            builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-            showDialogForIme(builder)
-        }
-        customButton.setBackgroundResource(R.drawable.toolbar_key_background)
-        val colors = Settings.getValues().mColors
-        colors.setColor(customButton.background, ColorType.TOOL_BAR_EXPAND_KEY_BACKGROUND)
-        customButton.setTextColor(colors.get(ColorType.KEY_TEXT))
-        languageList.addView(customButton)
-
         // Setup close button
+        val colors = Settings.getValues().mColors
         translateLanguageCloseButton.setBackgroundResource(R.drawable.toolbar_key_background)
         val closePadding = 9.dpToPx(resources)
         translateLanguageCloseButton.setPadding(closePadding, closePadding, closePadding, closePadding)
