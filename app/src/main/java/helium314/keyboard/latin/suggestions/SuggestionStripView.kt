@@ -820,9 +820,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
 
     private fun isSameLanguage(p1: Pair<String, String>, p2: Pair<String, String>): Boolean {
         return p1.first.equals(p2.first, ignoreCase = true) ||
-               p1.second.equals(p2.second, ignoreCase = true) ||
-               p1.first.equals(p2.second, ignoreCase = true) ||
-               p1.second.equals(p1.first, ignoreCase = true)
+               p1.second.equals(p2.second, ignoreCase = true)
     }
 
     fun showTranslateLanguageSelector() {
