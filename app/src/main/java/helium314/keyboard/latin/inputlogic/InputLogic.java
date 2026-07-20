@@ -380,14 +380,14 @@ public final class InputLogic {
             return inputTransaction;
         }
 
-        if (settingsValues.mAutospaceAfterSuggestion && settingsValues.mImmediateAutoSpace) {
-            commitChosenWord(settingsValues, suggestion + " ", LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
-                    LastComposedWord.NOT_A_SEPARATOR);
-            mSpaceState = SpaceState.DOUBLE;
-        } else {
-            commitChosenWord(settingsValues, suggestion, LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
-                    LastComposedWord.NOT_A_SEPARATOR);
-            if (settingsValues.mAutospaceAfterSuggestion) {
+        commitChosenWord(settingsValues, suggestion, LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
+                LastComposedWord.NOT_A_SEPARATOR);
+        if (settingsValues.mAutospaceAfterSuggestion) {
+            if (settingsValues.mImmediateAutoSpace) {
+                mConnection.finishComposingText();
+                mConnection.commitText(" ", 1);
+                mSpaceState = SpaceState.DOUBLE;
+            } else {
                 mSpaceState = SpaceState.PHANTOM;
             }
         }
