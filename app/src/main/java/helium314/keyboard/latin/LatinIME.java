@@ -624,7 +624,7 @@ public class LatinIME extends InputMethodService implements
         // avoids the SecurityException thrown by the plain registerReceiver()
         // overload on API 33+ when no exported flag is set.
         ContextCompat.registerReceiver(this, mRingerModeChangeReceiver, filter,
-                ContextCompat.RECEIVER_NOT_EXPORTED);
+                ContextCompat.RECEIVER_EXPORTED);
 
         // Register to receive installation and removal of a dictionary pack.
         final IntentFilter packageFilter = new IntentFilter();
