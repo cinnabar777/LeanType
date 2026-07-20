@@ -61,6 +61,7 @@ fun TextCorrectionScreen(
     val items = listOf(
 
         R.string.settings_category_correction,
+        Settings.PREF_GESTURE_INPUT,
         Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE,
         Settings.PREF_AUTO_CORRECTION,
         if (autocorrectEnabled) Settings.PREF_AUTO_CORRECT_TRIGGER else null,
