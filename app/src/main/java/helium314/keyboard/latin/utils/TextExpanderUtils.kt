@@ -16,6 +16,7 @@ object TextExpanderUtils {
     const val PREF_ENABLED = "pref_text_expander_enabled"
     const val PREF_PREFIX = "pref_text_expander_prefix"
     const val PREF_IMMEDIATE = "pref_text_expander_immediate"
+    const val PREF_BACKSPACE_REVERTS = "pref_text_expander_backspace_reverts"
     const val PREF_DATA = "pref_text_expander_data"
     const val REGEX_PREFIX = "__regex__:"
 
@@ -25,6 +26,10 @@ object TextExpanderUtils {
 
     fun isImmediateEnabled(context: Context): Boolean {
         return context.prefs().getBoolean(PREF_IMMEDIATE, false)
+    }
+
+    fun isBackspaceRevertsEnabled(context: Context): Boolean {
+        return context.prefs().getBoolean(PREF_BACKSPACE_REVERTS, true)
     }
 
 

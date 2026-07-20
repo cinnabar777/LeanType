@@ -1765,7 +1765,8 @@ public final class InputLogic {
             return;
         }
 
-        if (mLastExpandedText != null && !event.isKeyRepeat()) {
+        if (mLastExpandedText != null && !event.isKeyRepeat()
+                && helium314.keyboard.latin.utils.TextExpanderUtils.INSTANCE.isBackspaceRevertsEnabled(mLatinIME)) {
             final int expectedCursor = mConnection.getExpectedSelectionEnd();
             if (expectedCursor == mLastExpandedCursorPosition) {
                 final int beforeLen = mLastExpandedCursorOffset;
