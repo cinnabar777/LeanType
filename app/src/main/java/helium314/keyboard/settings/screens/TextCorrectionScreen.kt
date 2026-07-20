@@ -57,7 +57,7 @@ fun TextCorrectionScreen(
     val autocorrectEnabled = prefs.getBoolean(Settings.PREF_AUTO_CORRECTION, Defaults.PREF_AUTO_CORRECTION)
     val suggestionsVisible = Settings.readToolbarMode(prefs) in setOf(ToolbarMode.SUGGESTION_STRIP, ToolbarMode.EXPANDABLE)
     val suggestionsEnabled = suggestionsVisible && prefs.getBoolean(Settings.PREF_SHOW_SUGGESTIONS, Defaults.PREF_SHOW_SUGGESTIONS)
-    val gestureEnabled = JniUtils.sHaveNativeGestureLib && prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
+    val gestureEnabled = prefs.getBoolean(Settings.PREF_GESTURE_INPUT, Defaults.PREF_GESTURE_INPUT)
     val items = listOf(
 
         R.string.settings_category_correction,

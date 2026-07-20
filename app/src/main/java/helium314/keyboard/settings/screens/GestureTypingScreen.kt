@@ -60,6 +60,8 @@ fun GestureTypingScreen(
             add(R.string.settings_category_behavior)
             add(Settings.PREF_GESTURE_SPACE_AWARE)
             add(Settings.PREF_GESTURE_FAST_TYPING_COOLDOWN)
+            add(Settings.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING)
+            add(Settings.PREF_AUTOSPACE_AFTER_GESTURE_TYPING)
         }
 
         add(R.string.settings_category_gestures_advanced)
@@ -106,6 +108,12 @@ fun createGestureTypingSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_GESTURE_SPACE_AWARE, R.string.gesture_space_aware, R.string.gesture_space_aware_summary) {
         SwitchPreference(it, Defaults.PREF_GESTURE_SPACE_AWARE)
+    },
+    Setting(context, Settings.PREF_AUTOSPACE_AFTER_GESTURE_TYPING, R.string.autospace_after_gesture_typing) {
+        SwitchPreference(it, Defaults.PREF_AUTOSPACE_AFTER_GESTURE_TYPING)
+    },
+    Setting(context, Settings.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING, R.string.autospace_before_gesture_typing) {
+        SwitchPreference(it, Defaults.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING)
     },
     Setting(context, Settings.PREF_GESTURE_FAST_TYPING_COOLDOWN, R.string.gesture_fast_typing_cooldown) { def ->
         SliderPreference(
