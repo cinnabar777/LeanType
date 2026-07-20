@@ -106,12 +106,17 @@ object SubtypeSettings {
         } else if (enabledSubtypes.isNotEmpty()) {
             Log.w(TAG, "selected subtype $selectedSubtype / ${prefs.getString(Settings.PREF_SELECTED_SUBTYPE, Defaults.PREF_SELECTED_SUBTYPE)} not found")
         }
-        if (enabledSubtypes.isNotEmpty())
-            return enabledSubtypes.first()
+        if (enabledSubtypes.isNotEmpty()) {
+            val fallback = enabledSubtypes.first()
+            setSelectedSubtype(prefs, fallback)
+            return fallback
+        }
         val defaultSubtypes = getDefaultEnabledSubtypes()
-        return defaultSubtypes.firstOrNull { it.locale() == selectedSubtype.locale && it.mainLayoutName() == it.mainLayoutName() }
+        val fallback = defaultSubtypes.firstOrNull { it.locale() == selectedSubtype.locale && it.mainLayoutName() == it.mainLayoutName() }
             ?: defaultSubtypes.firstOrNull { it.locale().language == selectedSubtype.locale.language }
             ?: defaultSubtypes.first()
+        setSelectedSubtype(prefs, fallback)
+        return fallback
     }
 
     fun setSelectedSubtype(prefs: SharedPreferences, subtype: InputMethodSubtype) {
