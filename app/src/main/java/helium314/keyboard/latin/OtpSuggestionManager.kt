@@ -70,7 +70,6 @@ class OtpSuggestionManager(private val latinIME: LatinIME) {
     /** Register the SMS receiver if the feature is enabled and the permission is granted. Idempotent. */
     fun start() {
         if (isRegistered) return
-        if (!latinIME.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_SMS_OTP_RECEIVER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_SMS_OTP_RECEIVER)) return
         if (!latinIME.mSettings.current.mAutoReadOtp) return
         if (!PermissionsUtil.checkAllPermissionsGranted(latinIME, Manifest.permission.RECEIVE_SMS)) return
         try {

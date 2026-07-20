@@ -51,7 +51,7 @@ fun BackgroundServicesScreen(
         mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_CLIPBOARD_LISTENER, Defaults.PREF_ENABLE_CLIPBOARD_LISTENER))
     }
     var smsOtpEnabled by remember {
-        mutableStateOf(prefs.getBoolean(Settings.PREF_ENABLE_SMS_OTP_RECEIVER, Defaults.PREF_ENABLE_SMS_OTP_RECEIVER))
+        mutableStateOf(prefs.getBoolean(Settings.PREF_AUTO_READ_OTP, Defaults.PREF_AUTO_READ_OTP))
     }
     var appSyncEnabled by remember {
         mutableStateOf(prefs.getBoolean(Settings.PREF_USE_APPS, Defaults.PREF_USE_APPS))
@@ -138,7 +138,7 @@ fun BackgroundServicesScreen(
                 enabled = smsOtpEnabled,
                 onToggle = { enabled ->
                     smsOtpEnabled = enabled
-                    prefs.edit().putBoolean(Settings.PREF_ENABLE_SMS_OTP_RECEIVER, enabled).apply()
+                    prefs.edit().putBoolean(Settings.PREF_AUTO_READ_OTP, enabled).apply()
                 },
                 onStopClicked = {
                     Toast.makeText(context, "SMS Receiver unregistered", Toast.LENGTH_SHORT).show()
