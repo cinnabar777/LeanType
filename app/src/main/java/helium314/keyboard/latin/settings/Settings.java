@@ -690,6 +690,9 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
 
     @Nullable
     public Typeface getCustomEmojiTypeface() {
+        if (useSystemEmoji()) {
+            return null;
+        }
         if (!sCustomEmojiTypefaceLoaded) {
             try {
                 sCachedEmojiTypeface = Typeface.createFromFile(getCustomEmojiFontFile(mContext));
