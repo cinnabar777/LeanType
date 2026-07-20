@@ -382,12 +382,15 @@ public final class InputLogic {
 
         commitChosenWord(settingsValues, suggestion, LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
                 LastComposedWord.NOT_A_SEPARATOR);
+        if (settingsValues.mAutospaceAfterSuggestion) {
+            if (settingsValues.mImmediateAutoSpace) {
+                mConnection.commitText(" ", 1);
+                mSpaceState = SpaceState.DOUBLE;
+            } else {
+                mSpaceState = SpaceState.PHANTOM;
+            }
+        }
         mConnection.endBatchEdit();
-        // Don't allow cancellation of manual pick
-        mLastComposedWord.deactivate();
-        // Space state must be updated before calling updateShiftState
-        if (settingsValues.mAutospaceAfterSuggestion)
-            mSpaceState = SpaceState.PHANTOM;
         inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
         setInlineEmojiSearchAction(false);
 

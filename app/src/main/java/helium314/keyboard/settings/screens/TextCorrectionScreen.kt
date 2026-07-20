@@ -183,6 +183,9 @@ fun createCorrectionSettings(context: Context) = listOf(
     Setting(context, Settings.PREF_AUTOSPACE_AFTER_SUGGESTION, R.string.autospace_after_suggestion) {
         SwitchPreference(it, Defaults.PREF_AUTOSPACE_AFTER_SUGGESTION)
     },
+    Setting(context, Settings.PREF_IMMEDIATE_AUTO_SPACE, R.string.immediate_auto_space, R.string.immediate_auto_space_summary) {
+        SwitchPreference(it, Defaults.PREF_IMMEDIATE_AUTO_SPACE)
+    },
     Setting(context, Settings.PREF_AUTOSPACE_AFTER_GESTURE_TYPING, R.string.autospace_after_gesture_typing) {
         SwitchPreference(it, Defaults.PREF_AUTOSPACE_AFTER_GESTURE_TYPING)
     },

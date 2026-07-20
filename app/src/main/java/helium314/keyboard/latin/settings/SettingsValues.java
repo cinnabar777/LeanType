@@ -88,6 +88,7 @@ public class SettingsValues {
         public final boolean mAutospaceAfterPunctuation;
         public final boolean mAutospaceAfterEmoji;
         public final boolean mAutospaceAfterSuggestion;
+        public final boolean mImmediateAutoSpace;
         public final boolean mAutospaceAfterGestureTyping;
         public final boolean mAutospaceBeforeGestureTyping;
         public final boolean mShiftRemovesAutospace;
@@ -402,6 +403,8 @@ public class SettingsValues {
                                 Defaults.PREF_AUTOSPACE_AFTER_EMOJI);
                 mAutospaceAfterSuggestion = prefs.getBoolean(Settings.PREF_AUTOSPACE_AFTER_SUGGESTION,
                                 Defaults.PREF_AUTOSPACE_AFTER_SUGGESTION);
+                mImmediateAutoSpace = prefs.getBoolean(Settings.PREF_IMMEDIATE_AUTO_SPACE,
+                                Defaults.PREF_IMMEDIATE_AUTO_SPACE);
                 mAutospaceAfterGestureTyping = prefs.getBoolean(Settings.PREF_AUTOSPACE_AFTER_GESTURE_TYPING,
                                 Defaults.PREF_AUTOSPACE_AFTER_GESTURE_TYPING);
                 mAutospaceBeforeGestureTyping = prefs.getBoolean(Settings.PREF_AUTOSPACE_BEFORE_GESTURE_TYPING,

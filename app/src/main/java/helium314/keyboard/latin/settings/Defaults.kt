@@ -136,6 +136,7 @@ object Defaults {
     const val PREF_PRIORITIZE_PERSONAL_SUGGESTIONS = false
     const val PREF_NEXT_WORD_BOOST_LEVEL = "500"
     const val PREF_NEXT_WORD_STRICT_NGRAM = false
+    const val PREF_IMMEDIATE_AUTO_SPACE = false
     const val PREF_FIRST_WORD_PREDICTIONS = true
     const val PREF_SUGGEST_PUNCTUATION = false
     const val PREF_SUGGEST_CLIPBOARD_CONTENT = true
