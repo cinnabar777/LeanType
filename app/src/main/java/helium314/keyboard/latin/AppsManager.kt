@@ -32,8 +32,7 @@ class AppsManager(val context: Context) : BroadcastReceiver() {
     fun registerForUpdates(listener: AppsChangedListener) {
         this.listener = listener
         val useApps = context.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_USE_APPS, helium314.keyboard.latin.settings.Defaults.PREF_USE_APPS)
-        val enableListener = context.prefs().getBoolean(helium314.keyboard.latin.settings.Settings.PREF_ENABLE_APP_SYNC_LISTENER, helium314.keyboard.latin.settings.Defaults.PREF_ENABLE_APP_SYNC_LISTENER)
-        if (!useApps || !enableListener) return
+        if (!useApps) return
         val packageFilter = IntentFilter()
         packageFilter.addAction(Intent.ACTION_PACKAGE_ADDED)
         packageFilter.addAction(Intent.ACTION_PACKAGE_REMOVED)
