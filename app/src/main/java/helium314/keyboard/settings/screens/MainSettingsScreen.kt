@@ -50,10 +50,12 @@ fun MainSettingsScreen(
     onClickTextCorrection: () -> Unit,
     onClickPreferences: () -> Unit,
     onClickToolbar: () -> Unit,
+    onClickGestureTyping: () -> Unit,
     onClickAdvanced: () -> Unit,
     onClickAppearance: () -> Unit,
     onClickLanguage: () -> Unit,
     onClickLayouts: () -> Unit,
+    onClickGesture: () -> Unit,
     onClickLibraries: () -> Unit,
     onClickDictionaries: () -> Unit,
     onClickAIIntegration: () -> Unit,
@@ -177,6 +179,11 @@ fun MainSettingsScreen(
                 ) {
                     Column {
                         Preference(
+                            name = stringResource(R.string.settings_screen_gesture),
+                            onClick = onClickGestureTyping,
+                            icon = R.drawable.ic_settings_gesture
+                        ) { NextScreenIcon() }
+                        Preference(
                             name = stringResource(R.string.settings_screen_correction),
                             onClick = onClickTextCorrection,
                             icon = R.drawable.ic_settings_correction
@@ -227,7 +234,7 @@ private fun PreviewScreen() {
     initPreview(LocalContext.current)
     Theme(previewDark) {
         Surface {
-            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+            MainSettingsScreen({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
         }
     }
 }
