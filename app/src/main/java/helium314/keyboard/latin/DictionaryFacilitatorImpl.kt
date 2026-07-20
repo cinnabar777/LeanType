@@ -641,7 +641,7 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
             if (composedData.mTypedWord.isEmpty() && (dictionarySuggestions == null || dictionarySuggestions.isEmpty())
                 && dictType == Dictionary.TYPE_USER
             ) {
-                if (!Settings.getValues().mNextWordStrictNgram) {
+                if (!Settings.getValues().mNextWordStrictNgram && Settings.getValues().mPrioritizePersonalSuggestions) {
                     val allWords = try {
                         dictionary.allWordsWithFrequency
                     } catch (e: Exception) {
