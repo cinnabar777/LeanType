@@ -805,6 +805,19 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         prefs.edit().putString("pref_translation_language_history", serialized).apply()
     }
 
+    private fun showDialogForIme(builder: android.app.AlertDialog.Builder) {
+        val dialog = builder.create()
+        val window = dialog.window
+        if (window != null) {
+            val lp = window.attributes
+            lp.token = windowToken
+            lp.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
+            window.attributes = lp
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        }
+        dialog.show()
+    }
+
     fun showTranslateLanguageSelector() {
         // Hide other views
         suggestionsStrip.isVisible = false
@@ -880,7 +893,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                         dialog.dismiss()
                     }
                     builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-                    builder.show()
+                    showDialogForIme(builder)
                     true
                 }
             }
@@ -929,7 +942,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 dialog.dismiss()
             }
             builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-            builder.show()
+            showDialogForIme(builder)
         }
         customButton.setBackgroundResource(R.drawable.toolbar_key_background)
         val colors = Settings.getValues().mColors
