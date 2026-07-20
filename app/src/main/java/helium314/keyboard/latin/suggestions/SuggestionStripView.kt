@@ -798,6 +798,13 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         prefs.edit().putString("pref_translation_language_history", serialized).apply()
     }
 
+    private fun removeLanguageHistory(prefs: SharedPreferences, code: String) {
+        val currentHistory = getLanguageHistory(prefs).toMutableList()
+        currentHistory.removeAll { it.second == code }
+        val serialized = currentHistory.joinToString("\n") { "${it.second}|${it.first}" }
+        prefs.edit().putString("pref_translation_language_history", serialized).apply()
+    }
+
     fun showTranslateLanguageSelector() {
         // Hide other views
         suggestionsStrip.isVisible = false
@@ -859,6 +866,23 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 helium314.keyboard.latin.utils.ProofreadService(context).setTargetLanguage(languageCode)
                 hideTranslateLanguageSelector()
                 listener.onCodeInput(KeyCode.TRANSLATE, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
+            }
+
+            val isCustomOrHistory = history.any { it.second == languageCode }
+            if (isCustomOrHistory) {
+                button.setOnLongClickListener {
+                    val builder = android.app.AlertDialog.Builder(context)
+                    builder.setTitle(languageName)
+                    builder.setMessage("Remove this language from translation list?")
+                    builder.setPositiveButton("Remove") { dialog, _ ->
+                        removeLanguageHistory(prefs, languageCode)
+                        showTranslateLanguageSelector()
+                        dialog.dismiss()
+                    }
+                    builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+                    builder.show()
+                    true
+                }
             }
             button.setBackgroundResource(R.drawable.toolbar_key_background)
             val colors = Settings.getValues().mColors
