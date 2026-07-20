@@ -792,18 +792,21 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onDestroy() {
+        helium314.keyboard.latin.gesture.SwipeGestureEngine.cancelIndexing();
         mHandler.removeCallbacksAndMessages(null);
         if (mFloatingKeyboardManager != null) {
             mFloatingKeyboardManager.destroy();
         }
         mClipboardHistoryManager.onDestroy();
         mOtpSuggestionManager.stop();
-        mDictionaryFacilitator.closeDictionaries();
+        helium314.keyboard.latin.utils.ExecutorUtils.getBackgroundExecutor(helium314.keyboard.latin.utils.ExecutorUtils.KEYBOARD).execute(() -> {
+            mDictionaryFacilitator.closeDictionaries();
+        });
         mSettings.onDestroy();
-        unregisterReceiver(mRingerModeChangeReceiver);
-        unregisterReceiver(mDictionaryPackInstallReceiver);
-        unregisterReceiver(mDictionaryDumpBroadcastReceiver);
-        unregisterReceiver(mRestartAfterDeviceUnlockReceiver);
+        try { unregisterReceiver(mRingerModeChangeReceiver); } catch (Exception e) {}
+        try { unregisterReceiver(mDictionaryPackInstallReceiver); } catch (Exception e) {}
+        try { unregisterReceiver(mDictionaryDumpBroadcastReceiver); } catch (Exception e) {}
+        try { unregisterReceiver(mRestartAfterDeviceUnlockReceiver); } catch (Exception e) {}
         mStatsUtilsManager.onDestroy(this /* context */);
         super.onDestroy();
         deallocateMemory();

@@ -217,11 +217,18 @@ public final class ReadOnlyBinaryDictionary extends Dictionary {
 
     @Override
     public void close() {
-        mLock.writeLock().lock();
         try {
+            if (mLock.writeLock().tryLock(300, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                try {
+                    mBinaryDictionary.close();
+                } finally {
+                    mLock.writeLock().unlock();
+                }
+            } else {
+                mBinaryDictionary.close();
+            }
+        } catch (InterruptedException e) {
             mBinaryDictionary.close();
-        } finally {
-            mLock.writeLock().unlock();
         }
     }
 }

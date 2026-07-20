@@ -251,11 +251,19 @@ public class SwipeGestureEngine {
         }
     }
 
+    public static volatile boolean isCancelled = false;
+
+    public static void cancelIndexing() {
+        isCancelled = true;
+    }
+
     public static GestureIndex buildIndex(helium314.keyboard.latin.DictionaryFacilitator facilitator, Keyboard keyboard) {
+        isCancelled = false;
         Map<Character, float[]> charToPos = buildCharToPos(keyboard);
         Map<Character, List<IndexEntry>> byFirst = new HashMap<>();
         try {
             facilitator.forEachMainDictionaryWord((raw, freqVal) -> {
+                if (isCancelled) return;
                 if (raw == null) return;
                 if (facilitator.isBlacklisted(raw)) return;
                 int freq = freqVal != null ? freqVal : 0;
