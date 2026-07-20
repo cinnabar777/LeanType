@@ -173,6 +173,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
 
     public void onStartInput() {
         mLastSlowInputConnectionTime = -SLOW_INPUTCONNECTION_PERSIST_MS;
+        mNestLevel = 0;
     }
 
     private void checkConsistencyForDebug() {
