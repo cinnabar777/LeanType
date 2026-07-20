@@ -384,8 +384,9 @@ public final class InputLogic {
                 LastComposedWord.NOT_A_SEPARATOR);
         if (settingsValues.mAutospaceAfterSuggestion) {
             if (settingsValues.mImmediateAutoSpace) {
-                mConnection.finishComposingText();
                 mConnection.commitText(" ", 1);
+                mConnection.finishComposingText();
+                resetComposingState(false);
                 mSpaceState = SpaceState.DOUBLE;
             } else {
                 mSpaceState = SpaceState.PHANTOM;
