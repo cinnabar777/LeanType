@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gesture Typing Mode Settings -->
+    <string name="pref_gesture_mode_key">pref_gesture_mode</string>
+    <string name="pref_gesture_mode_title">Gesture Typing Mode</string>
+    <string name="pref_gesture_mode_summary">Control which dictionaries the gesture engine uses</string>
+
+    <!-- Gesture Mode Options -->
+    <string name="gesture_mode_standard">Standard</string>
+    <string name="gesture_mode_standard_desc">Full dictionary + learned words (best accuracy)</string>
+
+    <string name="gesture_mode_sandbox">Sandbox</string>
+    <string name="gesture_mode_sandbox_desc">Only learned words, no main dictionary</string>
+
+    <string name="gesture_mode_sandbox_only">Sandbox Only</string>
+    <string name="gesture_mode_sandbox_only_desc">Only user history, most restricted</string>
+
+    <!-- Session Word Cache (Proofreading) -->
+    <string name="pref_session_word_cache_key">pref_session_word_cache</string>
+    <string name="pref_session_word_cache_title">Proofread Before Learning</string>
+    <string name="pref_session_word_cache_summary">Cache words in session, review before adding to history</string>
+
+    <string name="pref_min_word_frequency_key">pref_min_word_frequency</string>
+    <string name="pref_min_word_frequency_title">Minimum Word Frequency</string>
+    <string name="pref_min_word_frequency_summary">Only learn words typed at least this many times per session</string>
+
+    <!-- Gesture Database / Cache -->
+    <string name="pref_gesture_cache_key">pref_gesture_cache</string>
+    <string name="pref_gesture_cache_title">Enable Gesture Mapping Cache</string>
+    <string name="pref_gesture_cache_summary">Store gesture patterns to improve accuracy and proofreading</string>
+
+    <!-- Session word cache proofreading dialog -->
+    <string name="title_session_words_proofreading">Review Learned Words</string>
+    <string name="msg_session_words_proofreading">Select words to add to your history. Uncheck to discard.</string>
+    <string name="btn_add_session_words">Add Checked Words</string>
+    <string name="btn_discard_session_words">Discard All</string>
+
+    <!-- Gesture degradation fix notices -->
+    <string name="msg_gesture_degradation_fixed">Gesture typing frequency write issue fixed</string>
+    <string name="msg_gesture_history_cleared">User history reloaded - gesture accuracy may improve</string>
+</resources>
