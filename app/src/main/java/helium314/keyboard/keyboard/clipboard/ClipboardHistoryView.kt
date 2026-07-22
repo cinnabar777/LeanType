@@ -416,12 +416,8 @@ class ClipboardHistoryView @JvmOverloads constructor(
     }
 
     private fun setupToolbarKeys() {
-        // set layout params
-        val toolbarKeyLayoutParams = LayoutParams(
-            resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width), 
-            resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
-        ).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
-        toolbarKeys.forEach { it.layoutParams = toolbarKeyLayoutParams }
+        applyClipboardToolbarKeyLayoutParams()
+        KeyboardSwitcher.getInstance().clipboardStrip?.post { applyClipboardToolbarKeyLayoutParams() }
     }
 
     private fun setupBottomRowKeyboard(editorInfo: EditorInfo, listener: KeyboardActionListener) {
@@ -651,7 +647,11 @@ class ClipboardHistoryView @JvmOverloads constructor(
         val clipboardStrip = KeyboardSwitcher.getInstance().clipboardStrip ?: return
         val count = clipboardStrip.childCount
         if (count == 0) return
-        val containerWidth = clipboardStrip.width.takeIf { it > 0 } ?: clipboardStrip.measuredWidth
+        val parentView = (clipboardStrip.parent as? View)
+        val containerWidth = parentView?.width?.takeIf { it > 0 }
+            ?: parentView?.measuredWidth?.takeIf { it > 0 }
+            ?: clipboardStrip.width.takeIf { it > 0 }
+            ?: clipboardStrip.measuredWidth
         val singleKeyWidth = context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
         val totalKeysWidth = count * singleKeyWidth
 
