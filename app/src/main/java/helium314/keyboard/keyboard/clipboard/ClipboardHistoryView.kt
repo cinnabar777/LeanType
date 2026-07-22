@@ -652,7 +652,8 @@ class ClipboardHistoryView @JvmOverloads constructor(
         val containerWidth = parentView?.width?.takeIf { it > 0 }
             ?: parentView?.measuredWidth?.takeIf { it > 0 }
             ?: clipboardStrip.width.takeIf { it > 0 }
-            ?: clipboardStrip.measuredWidth
+            ?: clipboardStrip.measuredWidth.takeIf { it > 0 }
+            ?: context.resources.displayMetrics.widthPixels
         val singleKeyWidth = context.resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
         val totalKeysWidth = count * singleKeyWidth
 

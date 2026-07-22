@@ -1077,8 +1077,12 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     private fun applyToolbarKeyLayoutParams(isExpanded: Boolean) {
         val count = toolbar.childCount
         if (count == 0) return
-        val containerWidth = toolbarContainer.width.takeIf { it > 0 } ?: toolbarContainer.measuredWidth
         val singleKeyWidth = resources.getDimensionPixelSize(R.dimen.config_suggestions_strip_edge_key_width)
+        val containerWidth = toolbarContainer.width.takeIf { it > 0 }
+            ?: toolbarContainer.measuredWidth.takeIf { it > 0 }
+            ?: (width - toolbarExpandKey.width - pinnedKeys.width).takeIf { it > 0 }
+            ?: (measuredWidth - toolbarExpandKey.measuredWidth - pinnedKeys.measuredWidth).takeIf { it > 0 }
+            ?: (resources.displayMetrics.widthPixels - singleKeyWidth * 2)
         val totalKeysWidth = count * singleKeyWidth
 
         val isAutoSpan = Settings.getValues().mAutoSpanToolbarKeys
