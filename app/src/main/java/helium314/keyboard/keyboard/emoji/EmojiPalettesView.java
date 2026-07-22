@@ -238,8 +238,17 @@ public final class EmojiPalettesView extends LinearLayout
     private boolean mInSearchMode = false;
     private boolean mIsDownloadingEmojiDict = false;
     private KeyboardActionListener mOriginalActionListener;
-
     private EditorInfo mEditorInfo;
+
+    public boolean isInSearchMode() {
+        return mInSearchMode;
+    }
+
+    public void onSearchTextInput(String text) {
+        if (mSearchBar != null && text != null) {
+            mSearchBar.append(text);
+        }
+    }
 
     // DownloadManager variables removed
 
@@ -570,6 +579,12 @@ public final class EmojiPalettesView extends LinearLayout
                 .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
                 .setOneHandedModeEnabled(settingsValues.mOneHandedModeEnabled)
                 .build();
+
+        bottomRow.setGestureHandlingEnabledByUser(
+                settingsValues.mGestureInputEnabled,
+                settingsValues.mGestureTrailEnabled,
+                settingsValues.mGestureFloatingPreviewTextEnabled
+        );
 
         bottomRow.setKeyboardActionListener(new KeyboardActionListener() {
             private int mDeleteSwipeStartSel = -1;

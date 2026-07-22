@@ -275,10 +275,18 @@ public class LatinIME extends InputMethodService implements
                     break;
                 case MSG_UPDATE_TAIL_BATCH_INPUT_COMPLETED:
                     final SuggestedWords suggestedWords = (SuggestedWords) msg.obj;
-                    latinIme.mInputLogic.onUpdateTailBatchInputCompleted(
-                            latinIme.mSettings.getCurrent(),
-                            suggestedWords, latinIme.mKeyboardSwitcher);
-                    latinIme.onTailBatchInputResultShown(suggestedWords);
+                    final EmojiPalettesView emojiPalettesView = latinIme.mKeyboardSwitcher.getEmojiPalettesView();
+                    if (emojiPalettesView != null && emojiPalettesView.isInSearchMode()) {
+                        final String batchInputText = (suggestedWords == null || suggestedWords.isEmpty()) ? null : suggestedWords.getWord(0);
+                        if (batchInputText != null) {
+                            emojiPalettesView.onSearchTextInput(batchInputText);
+                        }
+                    } else {
+                        latinIme.mInputLogic.onUpdateTailBatchInputCompleted(
+                                latinIme.mSettings.getCurrent(),
+                                suggestedWords, latinIme.mKeyboardSwitcher);
+                        latinIme.onTailBatchInputResultShown(suggestedWords);
+                    }
                     break;
                 case MSG_RESET_CACHES:
                     final SettingsValues settingsValues = latinIme.mSettings.getCurrent();
