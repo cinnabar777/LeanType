@@ -67,6 +67,48 @@ class ClipboardHistoryManager(
     @Volatile
     private var cachedScreenshotInfo: ScreenshotInfo? = null
 
+    private var screenshotObserver: ContentObserver? = null
+
+    private fun registerScreenshotObserver() {
+        if (screenshotObserver != null) return
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            android.Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        if (latinIME.checkCallingOrSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) return
+        try {
+            screenshotObserver = object : ContentObserver(mainHandler) {
+                override fun onChange(selfChange: Boolean, uri: Uri?) {
+                    super.onChange(selfChange, uri)
+                    if (latinIME.mSettings.current.mSuggestScreenshots) {
+                        updateLatestScreenshotCache {
+                            latinIME.tryShowClipboardSuggestion()
+                        }
+                    }
+                }
+            }
+            latinIME.contentResolver.registerContentObserver(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                true,
+                screenshotObserver!!
+            )
+        } catch (e: Exception) {
+            // Ignore observer registration failures
+        }
+    }
+
+    private fun unregisterScreenshotObserver() {
+        try {
+            screenshotObserver?.let {
+                latinIME.contentResolver.unregisterContentObserver(it)
+                screenshotObserver = null
+            }
+        } catch (e: Exception) {
+            // Ignore
+        }
+    }
+
     private fun updateLatestScreenshotCache(onComplete: (() -> Unit)? = null) {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             android.Manifest.permission.READ_MEDIA_IMAGES
@@ -125,7 +167,12 @@ class ClipboardHistoryManager(
                                 fullPath = it.getString(dataIndex) ?: ""
                             }
 
-                            val isScreenshot = fileName.contains("Screenshot", ignoreCase = true) || fullPath.contains("Screenshot", ignoreCase = true) || fullPath.contains("Pictures", ignoreCase = true)
+                            val isScreenshot = fileName.contains("Screenshot", ignoreCase = true)
+                                || fileName.contains("Screen", ignoreCase = true)
+                                || fullPath.contains("Screenshot", ignoreCase = true)
+                                || fullPath.contains("Screenshots", ignoreCase = true)
+                                || fullPath.contains("Pictures", ignoreCase = true)
+                                || fullPath.contains("DCIM", ignoreCase = true)
                             if (isScreenshot) {
                                 val idIndex = it.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media._ID)
                                 val id = it.getLong(idIndex)
@@ -133,8 +180,17 @@ class ClipboardHistoryManager(
                                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id
                                 )
                                 cachedScreenshotInfo = ScreenshotInfo(contentUri, fileName, fullPath, dateAdded)
-                                if (onComplete != null) {
-                                    mainHandler.post { onComplete() }
+                                
+                                if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
+                                    val cachedPath = cacheImage(contentUri)
+                                    if (cachedPath != null) {
+                                        clipboardDao?.addClip(System.currentTimeMillis(), false, "[Screenshot]", cachedPath)
+                                    }
+                                }
+
+                                mainHandler.post {
+                                    onComplete?.invoke()
+                                    latinIME.tryShowClipboardSuggestion()
                                 }
                                 return@execute
                             }
@@ -147,8 +203,8 @@ class ClipboardHistoryManager(
                 helium314.keyboard.latin.utils.Log.e("ClipboardHistoryManager", "Failed to query screenshots in background", e)
             }
             cachedScreenshotInfo = null
-            if (onComplete != null) {
-                mainHandler.post { onComplete() }
+            mainHandler.post {
+                onComplete?.invoke()
             }
         }
     }
@@ -184,6 +240,7 @@ class ClipboardHistoryManager(
             ExecutorUtils.getBackgroundExecutor(ExecutorUtils.KEYBOARD).execute { fetchPrimaryClip() }
         ExecutorUtils.getBackgroundExecutor(ExecutorUtils.KEYBOARD).execute { cleanUpImageCache() }
         if (latinIME.mSettings.current.mSuggestScreenshots) {
+            registerScreenshotObserver()
             updateLatestScreenshotCache()
         }
     }
@@ -216,6 +273,7 @@ class ClipboardHistoryManager(
     }
 
     fun onDestroy() {
+        unregisterScreenshotObserver()
         clipboardManager.removePrimaryClipChangedListener(this)
         mainHandler.removeCallbacksAndMessages(null)
     }
@@ -630,6 +688,6 @@ class ClipboardHistoryManager(
 
     companion object {
         const val RECENT_TIME_MILLIS = 1 * 60 * 1000L // 1 minute (for clipboard suggestions)
-        const val RECENT_SCREENSHOT_TIME_MILLIS = 1 * 60 * 1000L // 1 minute
+        const val RECENT_SCREENSHOT_TIME_MILLIS = 5 * 60 * 1000L // 5 minutes
     }
 }
