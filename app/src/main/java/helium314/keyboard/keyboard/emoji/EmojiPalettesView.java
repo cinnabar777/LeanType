@@ -271,7 +271,8 @@ public final class EmojiPalettesView extends LinearLayout
         // The main keyboard expands to the entire this {@link KeyboardView}.
         final int width = ResourceUtils.getKeyboardWidth(getContext(), Settings.getValues())
                 + getPaddingLeft() + getPaddingRight();
-        final int height = ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues())
+        final int height = (mInSearchMode ? ResourceUtils.getKeyboardHeight(res, Settings.getValues())
+                : ResourceUtils.getSecondaryKeyboardHeight(res, Settings.getValues()))
                 + getPaddingTop() + getPaddingBottom();
         mEmojiCategoryPageIndicatorView.mWidth = width;
         setMeasuredDimension(width, height);
@@ -552,7 +553,24 @@ public final class EmojiPalettesView extends LinearLayout
         MainKeyboardView bottomRow = findViewById(R.id.bottom_row_keyboard);
         mOriginalActionListener = mKeyboardActionListener;
 
-        // Listener for input... (Kept same as before)
+        final SettingsValues settingsValues = Settings.getValues();
+
+        final KeyboardLayoutSet.Builder builder = new KeyboardLayoutSet.Builder(ctx, mEditorInfo);
+        final int keyboardWidth = ResourceUtils.getKeyboardWidth(ctx, settingsValues);
+        final int keyboardHeight = ResourceUtils.getKeyboardHeight(ctx.getResources(), settingsValues);
+
+        final KeyboardLayoutSet kls = builder.setKeyboardGeometry(keyboardWidth, keyboardHeight)
+                .setSubtype(RichInputMethodManager.getInstance().getCurrentSubtype())
+                .setVoiceInputKeyEnabled(settingsValues.mShowsVoiceInputKey)
+                .setNumberRowEnabled(settingsValues.mShowsNumberRow)
+                .setNumberRowInSymbolsEnabled(settingsValues.mShowsNumberRowInSymbols)
+                .setCompactNumberRowInSymbolsEnabled(settingsValues.mCompactNumberRowInSymbols)
+                .setLanguageSwitchKeyEnabled(settingsValues.isLanguageSwitchKeyEnabled())
+                .setEmojiKeyEnabled(settingsValues.mShowsEmojiKey)
+                .setSplitLayoutEnabled(settingsValues.mIsSplitKeyboardEnabled)
+                .setOneHandedModeEnabled(settingsValues.mOneHandedModeEnabled)
+                .build();
+
         bottomRow.setKeyboardActionListener(new KeyboardActionListener() {
             private int mDeleteSwipeStartSel = -1;
             private int mCurrentDeleteSwipeStart = -1;
@@ -560,71 +578,69 @@ public final class EmojiPalettesView extends LinearLayout
             @Override
             public void onCodeInput(int primaryCode, int x, int y, boolean isKeyRepeat) {
                 if (primaryCode == KeyCode.DELETE) {
-                    Editable text = mSearchBar.getText();
+                    Editable text = mSearchBar != null ? mSearchBar.getText() : null;
                     if (text != null && text.length() > 0)
                         text.delete(text.length() - 1, text.length());
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_SPACE) {
-                    mSearchBar.append(" ");
+                    if (mSearchBar != null) mSearchBar.append(" ");
+                } else if (primaryCode == KeyCode.SYMBOL || primaryCode == KeyCode.SYMBOL_ALPHA) {
+                    bottomRow.setKeyboard(kls.getKeyboard(KeyboardId.ELEMENT_SYMBOLS));
+                } else if (primaryCode == KeyCode.ALPHA) {
+                    bottomRow.setKeyboard(kls.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
                 } else if (primaryCode > 0) {
-                    mSearchBar.append(String.valueOf((char) primaryCode));
+                    if (mSearchBar != null) mSearchBar.append(String.valueOf((char) primaryCode));
                 } else if (primaryCode == helium314.keyboard.latin.common.Constants.CODE_ENTER) {
                     stopSearchMode();
-                } else {
-                    stopSearchMode();
-                    mOriginalActionListener.onCodeInput(primaryCode, x, y, isKeyRepeat);
                 }
             }
 
             @Override
             public void onPressKey(int p, int r, boolean s, HapticEvent h) {
-                mOriginalActionListener.onPressKey(p, r, s, h);
+                if (mOriginalActionListener != null) mOriginalActionListener.onPressKey(p, r, s, h);
             }
 
             @Override
             public void onReleaseKey(int p, boolean w) {
                 mDeleteSwipeStartSel = -1;
                 mCurrentDeleteSwipeStart = -1;
-                mOriginalActionListener.onReleaseKey(p, w);
+                if (mOriginalActionListener != null) mOriginalActionListener.onReleaseKey(p, w);
             }
 
             @Override
             public void onTextInput(String t) {
-                mSearchBar.append(t);
+                if (mSearchBar != null && t != null) mSearchBar.append(t);
             }
 
             @Override
-            public void onImageSelected(String imageUri) {
-            }
-
-            // Empty implementations...
-            @Override
-            public void onLongPressKey(int p) {
-            }
+            public void onImageSelected(String imageUri) {}
 
             @Override
-            public boolean onKeyDown(int k, android.view.KeyEvent e) {
-                return false;
-            }
+            public void onLongPressKey(int p) {}
 
             @Override
-            public boolean onKeyUp(int k, android.view.KeyEvent e) {
-                return false;
-            }
+            public boolean onKeyDown(int k, android.view.KeyEvent e) { return false; }
+
+            @Override
+            public boolean onKeyUp(int k, android.view.KeyEvent e) { return false; }
 
             @Override
             public void onStartBatchInput() {
+                if (mOriginalActionListener != null) mOriginalActionListener.onStartBatchInput();
             }
 
             @Override
             public void onUpdateBatchInput(helium314.keyboard.latin.common.InputPointers p) {
+                if (mOriginalActionListener != null) mOriginalActionListener.onUpdateBatchInput(p);
             }
 
             @Override
             public void onEndBatchInput(helium314.keyboard.latin.common.InputPointers p) {
+                if (mOriginalActionListener != null) mOriginalActionListener.onEndBatchInput(p);
             }
 
             @Override
             public void onCancelBatchInput() {
+                if (mOriginalActionListener != null) mOriginalActionListener.onCancelBatchInput();
             }
 
             @Override
@@ -634,16 +650,14 @@ public final class EmojiPalettesView extends LinearLayout
             }
 
             @Override
-            public void onFinishSlidingInput() {
-            }
+            public void onFinishSlidingInput() {}
 
             @Override
-            public boolean onCustomRequest(int r) {
-                return false;
-            }
+            public boolean onCustomRequest(int r) { return false; }
 
             @Override
             public boolean onHorizontalSpaceSwipe(int s) {
+                if (mSearchBar == null) return false;
                 Editable text = mSearchBar.getText();
                 if (text == null) return false;
                 int len = text.length();
@@ -663,21 +677,17 @@ public final class EmojiPalettesView extends LinearLayout
             }
 
             @Override
-            public boolean onVerticalSpaceSwipe(int s) {
-                return false;
-            }
+            public boolean onVerticalSpaceSwipe(int s) { return false; }
 
             @Override
-            public void onEndSpaceSwipe() {
-            }
+            public void onEndSpaceSwipe() {}
 
             @Override
-            public boolean toggleNumpad(boolean w, boolean f) {
-                return false;
-            }
+            public boolean toggleNumpad(boolean w, boolean f) { return false; }
 
             @Override
             public void onMoveDeletePointer(int s) {
+                if (mSearchBar == null) return;
                 Editable text = mSearchBar.getText();
                 if (text == null) return;
                 if (mDeleteSwipeStartSel == -1) {
@@ -695,6 +705,7 @@ public final class EmojiPalettesView extends LinearLayout
 
             @Override
             public void onUpWithDeletePointerActive() {
+                if (mSearchBar == null) return;
                 Editable text = mSearchBar.getText();
                 if (text == null) return;
                 int selStart = mSearchBar.getSelectionStart();
@@ -707,27 +718,16 @@ public final class EmojiPalettesView extends LinearLayout
             }
 
             @Override
-            public void resetMetaState() {
-            }
+            public void resetMetaState() {}
         });
 
-        // Load Alpha Keyboard
-        KeyboardLayoutSet.Builder builder = new KeyboardLayoutSet.Builder(ctx, null);
-        builder.setSubtype(RichInputMethodManager.getInstance().getCurrentSubtype());
-        builder.setSplitLayoutEnabled(Settings.getValues().mIsSplitKeyboardEnabled);
-
-        // Fix: Use SecondaryKeyboardHeight which provides the exact height of the Emoji
-        // palettes area
-        // to avoid shrinking the keys to 20% while also preventing stretching.
-        builder.setKeyboardGeometry(ResourceUtils.getKeyboardWidth(ctx, Settings.getValues()),
-                ResourceUtils.getSecondaryKeyboardHeight(ctx.getResources(), Settings.getValues()));
-
-        KeyboardLayoutSet kls = builder.build();
         bottomRow.setKeyboard(kls.getKeyboard(KeyboardId.ELEMENT_ALPHABET));
-        bottomRow.setKeyPreviewPopupEnabled(Settings.getValues().mKeyPreviewPopupOn);
+        bottomRow.setKeyPreviewPopupEnabled(settingsValues.mKeyPreviewPopupOn);
+        requestLayout();
 
-        // Focus
-        mSearchBar.requestFocus();
+        if (mSearchBar != null) {
+            mSearchBar.requestFocus();
+        }
     }
 
     private void stopSearchMode() {
