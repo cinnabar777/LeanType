@@ -180,8 +180,9 @@ class ClipboardHistoryManager(
                                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id
                                 )
                                 val prefs = latinIME.prefs()
-                                val deletedSet = prefs.getStringSet("deleted_screenshot_uris", emptySet()) ?: emptySet()
-                                if (deletedSet.contains(contentUri.toString()) || deletedSet.contains(fullPath)) {
+                                val rawDeletedSet = prefs.getStringSet("deleted_screenshot_uris", emptySet()) ?: emptySet()
+                                val deletedSet = rawDeletedSet.filter { it.startsWith("content://") || it.contains("clipboard_images") }.toSet()
+                                if (deletedSet.contains(contentUri.toString())) {
                                     return@execute
                                 }
 
@@ -192,7 +193,7 @@ class ClipboardHistoryManager(
                                 
                                 if (latinIME.mSettings.current.mClipboardHistoryEnabled) {
                                     val cachedPath = cacheImage(contentUri)
-                                    if (cachedPath != null && !deletedSet.contains(cachedPath)) {
+                                    if (cachedPath != null && !deletedSet.contains(cachedPath) && !deletedSet.contains(contentUri.toString())) {
                                         clipboardDao?.addClip(System.currentTimeMillis(), false, "[Screenshot]", cachedPath)
                                     }
                                 }
@@ -654,9 +655,9 @@ class ClipboardHistoryManager(
         closeButton.setImageDrawable(latinIME.mKeyboardSwitcher.keyboard.mIconsSet.getIconDrawable(ToolbarKey.CLOSE_HISTORY.name.lowercase()))
         closeButton.setOnClickListener { 
             val prefs = latinIME.prefs()
-            val deletedSet = prefs.getStringSet("deleted_screenshot_uris", emptySet())?.toMutableSet() ?: mutableSetOf()
+            val rawDeletedSet = prefs.getStringSet("deleted_screenshot_uris", emptySet()) ?: emptySet()
+            val deletedSet = rawDeletedSet.filter { it.startsWith("content://") || it.contains("clipboard_images") }.toMutableSet()
             deletedSet.add(contentUri.toString())
-            deletedSet.add(screenshotInfo.fullPath)
             prefs.edit().putStringSet("deleted_screenshot_uris", deletedSet)
                 .putString("last_dismissed_screenshot_uri", contentUri.toString()).apply()
             cachedScreenshotInfo = null
